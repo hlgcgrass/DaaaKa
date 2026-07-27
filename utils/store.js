@@ -186,15 +186,21 @@ function calcBest(records) {
   return best
 }
 
-// 最近 n 天（含今天）的打卡状态，今天在索引 0（最左），旧天往右排
+// 最近 n 天圆点：从左到右按连续天数排列，第 1 个圆点 = 习惯创建日
+// 起点取「习惯创建日」与「今天往前 n-1 天」中较晚者：
+//   - 习惯较新（不足 n 天）：从创建日开始，昨天打卡→第 1 个实心，今天→第 2 个；
+//   - 习惯较老：取最近 n 天（含今天），最旧在左、今天在最右。
 function recentDays(id, n) {
   const h = getHabits().find(x => x.id === id)
   const rec = h ? h.records : {}
-  const arr = []
   const t = todayStr()
+  const created = h ? h.createdAt : t
+  let start = addDays(t, -(n - 1))
+  if (created > start) start = created
+  const arr = []
   for (let i = 0; i < n; i++) {
-    const ds = addDays(t, -i)
-    arr.push({ date: ds, done: !!rec[ds] })
+    const ds = addDays(start, i)
+    arr.push({ date: ds, done: !!rec[ds], isFuture: ds > t })
   }
   return arr
 }

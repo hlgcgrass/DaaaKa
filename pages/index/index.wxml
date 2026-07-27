@@ -59,7 +59,7 @@
 
         <view class="dots">
           <view wx:for="{{item.recent7}}" wx:for-item="d" wx:key="index"
-                class="dot {{d.done ? 'on' : 'off'}}" style="{{d.done ? 'background:' + item.color : ''}}"></view>
+                class="dot {{d.done ? 'on' : (d.isFuture ? 'future' : 'off')}}" style="{{d.done ? 'background:' + item.color : ''}}"></view>
         </view>
 
         <!-- 计时打卡状态行 -->

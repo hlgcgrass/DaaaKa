@@ -1,0 +1,164 @@
+<view class="page">
+  <!-- 顶部概览 -->
+  <view class="hero">
+    <view class="hero-top">
+      <text class="date">{{dateLabel}}</text>
+      <text class="identity" wx:if="{{identity}}">{{identity}}</text>
+      <text class="identity muted" wx:else>去「统计」页写下你想成为的人</text>
+    </view>
+    <view class="progress-row">
+      <view class="progress-num">
+        <text class="big">{{doneCount}}</text><text class="slash">/{{total}}</text>
+        <text class="plabel">今日完成</text>
+      </view>
+      <view class="bar">
+        <view class="bar-fill" style="width:{{progress}}%"></view>
+      </view>
+    </view>
+    <view class="quotes">
+      <text class="quote {{quoteFade ? 'show' : ''}}">{{quote.text}}</text>
+      <text class="quote-from {{quoteFade ? 'show' : ''}}">—— {{quote.from}}</text>
+    </view>
+  </view>
+
+  <!-- 习惯列表 -->
+  <view class="list">
+    <view class="card" wx:for="{{habits}}" wx:key="id">
+      <!-- 左滑删除：右侧隐藏的删除按钮 -->
+      <view class="del-slot" bindtap="removeHabit" data-id="{{item.id}}">删除</view>
+      <!-- 可滑动的内容层 -->
+      <view class="card-slide {{swipedId === item.id ? 'open' : ''}}"
+            data-id="{{item.id}}"
+            bindtouchstart="onSwipeStart" bindtouchmove="onSwipeMove" bindtouchend="onSwipeEnd">
+        <view class="card-row">
+          <view class="card-main">
+            <image class="emoji" style="background:{{item.color}}1a" src="{{item.emoji}}" mode="aspectFit" />
+            <view class="info">
+              <view class="name">{{item.name}}</view>
+              <view class="sub" wx:if="{{item.cue || item.time}}">{{item.time ? item.time + ' · ' : ''}}{{item.cue}}</view>
+              <view class="streak {{item.streak > 0 ? 'on' : ''}}">🔥 连续 {{item.streak}} 天</view>
+            </view>
+          </view>
+
+          <view class="check {{item.doneToday ? 'done' : ''}} {{item.timing ? 'timing' : ''}}"
+                style="{{item.doneToday ? 'background:' + item.color + ';border-color:' + item.color : (item.timing ? 'border-color:' + item.color : '')}}"
+                bindtap="onToggle" data-id="{{item.id}}">
+            <text wx:if="{{item.doneToday}}" class="ck">✓</text>
+            <text wx:elif="{{item.timing}}" class="cd">{{item.remainingText}}</text>
+            <text wx:elif="{{item.timerMin > 0}}" class="play">▶</text>
+            <!-- 单项打卡星星特效 -->
+            <view class="star-burst" wx:if="{{item.stars && item.stars.length > 0}}">
+              <view wx:for="{{item.stars}}" wx:for-item="s" wx:key="index"
+                    class="star-particle s{{s.dir}}"
+                    style="color:{{s.color}}; animation-delay:{{s.delay}}s;">
+                {{s.emoji}}
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <view class="dots">
+          <view wx:for="{{item.recent7}}" wx:for-item="d" wx:key="index"
+                class="dot {{d.done ? 'on' : 'off'}}" style="{{d.done ? 'background:' + item.color : ''}}"></view>
+        </view>
+
+        <!-- 计时打卡状态行 -->
+        <view class="timer-row" wx:if="{{item.timerMin > 0 && !item.doneToday}}">
+          <view class="timer-bar" wx:if="{{item.timing}}"><view class="timer-bar-fill" style="width:{{item.timerPct}}%;background:{{item.color}}"></view></view>
+          <view class="timer-meta">
+            <text class="timer-text" wx:if="{{item.timing}}">⏱ 计时中 {{item.remainingText}}</text>
+            <text class="timer-hint" wx:else>⏱ 需 {{item.timerMin}} 分钟 · 点右侧 ▶ 开始计时</text>
+            <view class="timer-actions">
+              <text wx:if="{{item.timing}}" class="timer-cancel" catchtap="onToggle" data-id="{{item.id}}">取消</text>
+              <text class="timer-done" catchtap="onCompleteNow" data-id="{{item.id}}">直接完成</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{habits.length === 0}}">
+      <view class="empty-emoji">🌱</view>
+      <view class="empty-title">还没有习惯</view>
+      <view class="empty-sub">点击下方按钮，添加你的第一个习惯</view>
+    </view>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="add-wrap">
+    <button class="add-btn {{canAdd ? '' : 'disabled'}}" bindtap="openAdd">
+      ＋ 添加习惯 <text class="quota">{{quotaText}}</text>
+    </button>
+  </view>
+
+  <!-- 添加弹窗 -->
+  <view class="mask" wx:if="{{showAdd}}" bindtap="closeAdd">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-title">添加习惯</view>
+
+      <view class="field">
+        <input class="f-input" type="text" placeholder="习惯名称，如：阅读30分钟" placeholder-class="f-ph"
+               value="{{form.name}}" bindinput="onNameInput" maxlength="20" confirm-type="next" />
+        <text class="err" wx:if="{{nameError}}">{{nameError}}</text>
+      </view>
+
+      <view class="field-label">图标</view>
+      <scroll-view class="emoji-row" scroll-x="true">
+        <view wx:for="{{emojiList}}" wx:key="*this"
+              class="emoji-opt {{form.emoji === item ? 'sel' : ''}}"
+              bindtap="selectEmoji" data-v="{{item}}">
+          <image class="emoji-opt-img" src="{{item}}" mode="aspectFit" />
+        </view>
+      </scroll-view>
+
+      <view class="field-label">颜色</view>
+      <view class="color-row">
+        <view wx:for="{{colorList}}" wx:key="*this"
+              class="color-opt {{form.color === item ? 'sel' : ''}}"
+              style="background:{{item}}" bindtap="selectColor" data-v="{{item}}"></view>
+      </view>
+
+      <view class="field-label">习惯堆叠（可选）· 让习惯更具体</view>
+      <view class="stack-preview">我会在 <input class="inline" type="text" placeholder="时间" value="{{form.time}}" bindinput="onTimeInput" /> 在 <input class="inline" type="text" placeholder="地点/情境" value="{{form.cue}}" bindinput="onCueInput" /> 做「{{form.name || '这个习惯'}}」</view>
+
+      <view class="field-label">计时打卡（可选）</view>
+      <view class="timer-setting">
+        <view class="switch-line">
+          <text class="ts-label">需要计时完成</text>
+          <switch checked="{{form.timerEnabled}}" bindchange="onTimerToggle" color="#07c160" />
+        </view>
+        <view class="min-row" wx:if="{{form.timerEnabled}}">
+          <text class="min-label">时长</text>
+          <input class="min-input" type="number" value="{{form.timerMin}}" bindinput="onTimerMinInput" />
+          <text class="min-unit">分钟</text>
+          <view class="chips">
+            <view wx:for="{{timerChips}}" wx:key="*this"
+                  class="chip {{form.timerMin === item ? 'sel' : ''}}"
+                  style="{{form.timerMin === item ? 'background:' + form.color + ';border-color:' + form.color : ''}}"
+                  bindtap="setTimerMin" data-v="{{item}}">{{item}}</view>
+          </view>
+        </view>
+        <view class="timer-tip" wx:if="{{form.timerEnabled}}">开启后，点一下开始倒计时，时间到自动打卡成功（可中途取消）</view>
+      </view>
+
+      <view class="sheet-actions">
+        <button class="btn ghost" bindtap="closeAdd">取消</button>
+        <button class="btn primary" bindtap="confirmAdd">保存</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 全部完成庆祝特效 -->
+  <view class="celebrate" wx:if="{{showCelebrate}}" bindtap="closeCelebrate" catchtouchmove="noop">
+    <view class="confetti-layer">
+      <view wx:for="{{confetti}}" wx:key="index" class="confetti"
+            style="left:{{item.left}}%; background:{{item.color}}; border-radius:{{item.round}}; animation-delay:{{item.delay}}s; animation-duration:{{item.duration}}s;"></view>
+    </view>
+    <view class="celebrate-card">
+      <view class="celebrate-emoji">🎉</view>
+      <view class="celebrate-title">今日打卡全部完成！</view>
+      <view class="celebrate-sub">每一天的坚持，都在塑造更好的你</view>
+      <view class="celebrate-pill">继续保持，不连续错过两次 💪</view>
+    </view>
+  </view>
+</view>

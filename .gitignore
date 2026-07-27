@@ -1,0 +1,9 @@
+node_modules/
+keys/
+*.key
+.DS_Store
+npm-debug.log
+.env
+.env.local
+.workbuddy/
+project.private.config.json

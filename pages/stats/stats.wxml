@@ -1,0 +1,108 @@
+<view class="page">
+  <!-- 身份认同 + 头像 -->
+  <view class="identity-card">
+    <view class="id-row">
+      <view class="avatar-wrap">
+        <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+          <image wx:if="{{avatar}}" class="avatar-img" src="{{avatar}}" mode="aspectFill" />
+          <image wx:else class="avatar-img" src="/assets/A_kawaii_plush_mascot_dog_char_2026-07-26T06-25-42.png" mode="aspectFill" />
+        </button>
+      </view>
+      <view class="id-col">
+        <view class="id-line1">
+          <text class="id-label">我想成为的人</text>
+          <text class="id-edit" bindtap="startEditIdentity">✎ 编辑</text>
+        </view>
+        <block wx:if="{{!editingIdentity}}">
+          <view class="id-text" wx:if="{{identity}}">{{identity}}</view>
+          <view class="id-text muted" wx:else>点此写下你的身份，例如「我是一个自律的人」</view>
+        </block>
+        <block wx:else>
+          <textarea class="id-area" value="{{identityDraft}}" bindinput="onIdentityInput" maxlength="40" placeholder="我是一个……的人" auto-focus />
+          <view class="id-actions">
+            <button class="mini ghost" bindtap="cancelIdentity">取消</button>
+            <button class="mini primary" bindtap="saveIdentity">保存</button>
+          </view>
+        </block>
+      </view>
+    </view>
+  </view>
+
+  <!-- 今日总览 -->
+  <view class="overview">
+    <view class="ov-item"><text class="ov-num">{{done}}/{{total}}</text><text class="ov-label">今日打卡</text></view>
+    <view class="ov-item"><text class="ov-num">{{rate}}%</text><text class="ov-label">完成率</text></view>
+    <view class="ov-item"><text class="ov-num">{{habits.length}}</text><text class="ov-label">习惯数</text></view>
+  </view>
+
+  <!-- 打卡日历 -->
+  <view class="section-title">打卡日历</view>
+  <view class="cal-card">
+    <view class="cal-head">
+      <view class="cal-arrow" bindtap="prevMonth">‹</view>
+      <view class="cal-month">{{monthLabel}}</view>
+      <view class="cal-arrow" bindtap="nextMonth">›</view>
+    </view>
+    <view class="cal-week">
+      <text class="cal-wd" wx:for="{{weekHeads}}" wx:key="*this">{{item}}</text>
+    </view>
+    <view class="cal-grid {{calAnim}}" bindtouchstart="onCalTouchStart" bindtouchend="onCalTouchEnd">
+      <view wx:for="{{calCells}}" wx:key="index"
+            class="cal-cell {{item.empty ? 'empty' : ''}} {{item.isToday ? 'today' : ''}}">
+        <block wx:if="{{!item.empty}}">
+          <text class="cal-day">{{item.day}}</text>
+          <view class="cal-mark {{item.status}}">
+            <text wx:if="{{item.status === 'full'}}">✓</text>
+            <text wx:elif="{{item.status === 'miss'}}">✕</text>
+          </view>
+        </block>
+      </view>
+    </view>
+    <view class="cal-legend">
+      <view class="lg-item"><view class="lg full">✓</view><text class="lg-txt">全完成</text></view>
+      <view class="lg-item"><view class="lg part"></view><text class="lg-txt">部分</text></view>
+      <view class="lg-item"><view class="lg miss">✕</view><text class="lg-txt">未打卡</text></view>
+    </view>
+  </view>
+
+  <!-- 习惯轨迹：《原子习惯》不要打断链条 -->
+  <view class="section-title">习惯轨迹</view>
+  <view class="habits">
+    <view class="hcard" wx:for="{{habits}}" wx:key="id">
+      <!-- 头部：emoji + 名称 + 数据 -->
+      <view class="hcard-head">
+        <image class="h-emoji" src="{{item.emoji}}" mode="aspectFit" />
+        <text class="h-name">{{item.name}}</text>
+        <text class="h-meta">🔥{{item.streak}}天 · 🏆{{item.best}}天 · 共{{item.count}}天</text>
+      </view>
+
+      <!-- 打卡链条（今天在最左，往右=过去） -->
+      <view class="chain-wrap">
+        <scroll-view class="chain-scroll" scroll-x="true" show-scrollbar="{{false}}">
+          <view class="chain">
+            <view wx:for="{{item.chain}}" wx:for-item="c" wx:key="date"
+                  class="link {{c.done ? 'done' : ''}} {{c.isToday ? 'today' : ''}}"
+                  style="{{c.done ? 'background:' + item.color : ''}}">
+              <text wx:if="{{c.isToday}}" class="link-today">今</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- 激励语（《原子习惯》风格） -->
+      <view class="msg-row">
+        <text class="msg-text">{{item.msg.text}}</text>
+        <text class="msg-sub">{{item.msg.sub}}</text>
+      </view>
+
+      <!-- 里程碑成就 -->
+      <view class="badges" wx:if="{{item.badges.length > 0}}">
+        <view class="badge" wx:for="{{item.badges}}" wx:for-item="b" wx:key="name">
+          <text class="badge-icon">{{b.icon}}</text>
+          <text class="badge-name">{{b.name}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty muted" wx:if="{{habits.length === 0}}">还没有习惯，去「打卡」页添加吧</view>
+  </view>
+</view>

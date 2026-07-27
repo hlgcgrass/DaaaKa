@@ -1,0 +1,15 @@
+{
+  "name": "miniprogram-todo-ci",
+  "version": "1.0.0",
+  "private": true,
+  "description": "微信小程序自动化发布脚本（上传/提交审核/发布）",
+  "scripts": {
+    "upload": "node upload.js",
+    "audit": "node submit-audit.js",
+    "release": "node release.js"
+  },
+  "dependencies": {
+    "less": "^3.13.1",
+    "miniprogram-ci": "^1.9.17"
+  }
+}

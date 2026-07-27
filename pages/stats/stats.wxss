@@ -1,0 +1,92 @@
+.page { padding: 24rpx 24rpx 60rpx; }
+
+.identity-card { background: #fff; border-radius: 20rpx; padding: 28rpx; box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04); }
+.id-row { display: flex; align-items: center; }
+/* 头像：外层容器定尺寸+裁圆，内层 button 清除全部默认样式 */
+.avatar-wrap { width: 100rpx; height: 100rpx; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #f5f5f5; }
+.avatar-btn { width: 100rpx !important; height: 100rpx !important; margin: 0 !important; padding: 0 !important; border: none !important; border-radius: 0 !important; background: transparent !important; line-height: 100rpx !important; font-size: 0 !important; }
+.avatar-btn::after { display: none; }
+.avatar-img { width: 100rpx; height: 100rpx; display: block; }
+/* 右侧区域：两行垂直排列，居左对齐 */
+.id-col { margin-left: 24rpx; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
+.id-line1 { display: flex; align-items: center; width: 100%; }
+.id-label { font-size: 26rpx; color: #999; line-height: 1.4; }
+.id-edit { font-size: 26rpx; color: #07c160; line-height: 1.4; margin-left: auto; }
+/* 身份文字：与上方标签左对齐，干净文本展示 */
+.id-text { font-size: 30rpx; font-weight: 600; margin-top: 10rpx; line-height: 1.5; color: #333; }
+.id-text.muted { font-weight: 400; color: #bbb; font-size: 28rpx; }
+.id-area { width: 100%; height: 120rpx; font-size: 30rpx; margin-top: 12rpx; }
+.id-actions { display: flex; gap: 20rpx; margin-top: 16rpx; }
+.mini { flex: 1; font-size: 26rpx; line-height: 72rpx; border-radius: 40rpx; margin: 0; }
+.mini::after { border: none; }
+.mini.ghost { background: #f0f0f0; color: #333; }
+.mini.primary { background: #07c160; color: #fff; }
+
+.overview { display: flex; background: #fff; border-radius: 20rpx; margin-top: 20rpx; padding: 28rpx 0; box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04); }
+.ov-item { flex: 1; display: flex; flex-direction: column; align-items: center; border-right: 1rpx solid #f0f0f0; }
+.ov-item:last-child { border-right: none; }
+.ov-num { font-size: 40rpx; font-weight: 700; color: #07c160; }
+.ov-label { font-size: 24rpx; color: #999; margin-top: 6rpx; }
+
+.section-title { font-size: 28rpx; font-weight: 600; margin: 32rpx 8rpx 16rpx; }
+.hcard { background: #fff; border-radius: 20rpx; padding: 24rpx; margin-bottom: 18rpx; box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04); }
+.hcard-head { display: flex; align-items: center; flex-wrap: wrap; }
+.h-emoji { width: 48rpx; height: 48rpx; margin-right: 12rpx; flex-shrink: 0; }
+.h-name { font-size: 30rpx; font-weight: 600; }
+.h-meta { font-size: 22rpx; color: #999; margin-left: 12rpx; flex: 1; min-width: 0; text-align: right; }
+/* 习惯轨迹 - 打卡链条（不要打断链条） */
+.chain-wrap { margin-top: 20rpx; }
+.chain-scroll { white-space: nowrap; }
+.chain { display: inline-flex; gap: 12rpx; padding: 8rpx 8rpx 8rpx 20rpx; }
+.link { width: 48rpx; height: 48rpx; border-radius: 50%; background: #eee; flex-shrink: 0; display: flex; align-items: center; justify-content: center; position: relative; transition: transform 0.2s; }
+.link.done { opacity: 1; box-shadow: inset 0 -3rpx 0 rgba(0,0,0,0.08); }
+.link.today { box-shadow: 0 0 0 4rpx #07c160, 0 2rpx 8rpx rgba(7,193,96,0.25); transform: scale(1.15); z-index: 1; }
+.link-today { font-size: 18rpx; color: #fff; font-weight: 700; }
+
+/* 激励语 */
+.msg-row { margin-top: 18rpx; padding: 16rpx 20rpx; background: #f9fdf9; border-radius: 12rpx; border-left: 6rpx solid #07c160; }
+.msg-text { font-size: 27rpx; color: #333; font-weight: 500; display: block; line-height: 1.5; }
+.msg-sub { font-size: 23rpx; color: #888; display: block; margin-top: 6rpx; }
+
+/* 里程碑成就 */
+.badges { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 18rpx; padding-top: 18rpx; border-top: 1rpx solid #f0f0f0; }
+.badge { display: flex; align-items: center; background: #f9f9f9; border-radius: 24rpx; padding: 8rpx 20rpx; }
+.badge-icon { font-size: 28rpx; margin-right: 6rpx; }
+.badge-name { font-size: 22rpx; color: #555; }
+.muted { color: #aaa; }
+.empty { text-align: center; font-size: 28rpx; padding: 40rpx 0; }
+
+/* 打卡日历 */
+.cal-card { background: #fff; border-radius: 20rpx; padding: 24rpx; box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04); }
+.cal-head { display: flex; align-items: center; justify-content: space-between; }
+.cal-arrow { font-size: 48rpx; color: #07c160; line-height: 1; padding: 0 24rpx; }
+.cal-month { font-size: 32rpx; font-weight: 600; }
+.cal-week { display: flex; margin: 20rpx 0 8rpx; }
+.cal-wd { flex: 1; text-align: center; font-size: 24rpx; color: #999; }
+.cal-grid { display: flex; flex-wrap: wrap; }
+.cal-grid.slide-in-left { animation: calSlideL 0.32s ease both; }
+.cal-grid.slide-in-right { animation: calSlideR 0.32s ease both; }
+@keyframes calSlideL {
+  0% { transform: translateX(-28rpx); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+@keyframes calSlideR {
+  0% { transform: translateX(28rpx); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+.cal-cell { width: 14.2857%; box-sizing: border-box; padding: 10rpx 0; display: flex; flex-direction: column; align-items: center; border-radius: 12rpx; }
+.cal-cell.empty { visibility: hidden; }
+.cal-cell.today { background: #eef7f0; }
+.cal-day { font-size: 26rpx; color: #333; }
+.cal-cell.today .cal-day { color: #07c160; font-weight: 700; }
+.cal-mark { width: 38rpx; height: 38rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24rpx; margin-top: 6rpx; line-height: 1; }
+.cal-mark.full { background: #07c160; color: #fff; }
+.cal-mark.part { border: 3rpx solid #ff9800; }
+.cal-mark.miss { color: #e91e63; }
+.cal-legend { display: flex; justify-content: center; gap: 40rpx; margin-top: 20rpx; font-size: 22rpx; color: #999; }
+.lg-item { display: flex; align-items: center; }
+.lg { flex-shrink: 0; width: 30rpx; height: 30rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20rpx; line-height: 1; margin-right: 8rpx; box-sizing: border-box; }
+.lg.full { background: #07c160; color: #fff; }
+.lg.part { border: 3rpx solid #ff9800; }
+.lg.miss { color: #e91e63; }
+.lg-txt { line-height: 30rpx; }

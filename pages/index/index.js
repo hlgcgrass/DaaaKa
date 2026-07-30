@@ -325,7 +325,7 @@ Page({
   },
   onCueInput: function (e) { this.setData({ 'form.cue': e.detail.value }) },
   onTimeInput: function (e) { this.setData({ 'form.time': e.detail.value }) },
-  selectCategory: function (e) { this.setData({ 'form.category': e.currentTarget.dataset.v }) },
+  selectFormCategory: function (e) { this.setData({ 'form.category': e.currentTarget.dataset.v }) },
   selectEmoji: function (e) { this.setData({ 'form.emoji': e.currentTarget.dataset.v }) },
   selectColor: function (e) { this.setData({ 'form.color': e.currentTarget.dataset.v }) },
   onTimerToggle: function (e) { this.setData({ 'form.timerEnabled': e.detail.value }) },

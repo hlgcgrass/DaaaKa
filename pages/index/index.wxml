@@ -219,7 +219,7 @@
         <view wx:for="{{groupCategories}}" wx:key="id"
               class="cat-chip {{form.category === item.id ? 'sel' : ''}}"
               style="{{form.category === item.id ? 'background:' + item.color + ';border-color:' + item.color + ';color:#fff' : 'border-color:#ccc'}}"
-              bindtap="selectCategory" data-v="{{item.id}}">
+              bindtap="selectFormCategory" data-v="{{item.id}}">
           {{item.icon}} {{item.name}}
         </view>
       </view>

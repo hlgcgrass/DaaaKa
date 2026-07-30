@@ -1,97 +1,206 @@
-<view class="page">
-  <!-- 顶部概览 -->
-  <view class="hero">
-    <view class="hero-top">
-      <text class="date">{{dateLabel}}</text>
-      <text class="identity" wx:if="{{identity}}">{{identity}}</text>
-      <text class="identity muted" wx:else>去「统计」页写下你想成为的人</text>
+<view class="app-shell">
+  <!-- ===== 左侧侧边栏 ===== -->
+  <view class="sidebar">
+    <view class="sidebar-head">
+      <image class="avatar" src="{{avatar}}" mode="aspectFill" />
+      <text class="app-name">习惯打卡</text>
     </view>
-    <view class="progress-row">
-      <view class="progress-num">
-        <text class="big">{{doneCount}}</text><text class="slash">/{{total}}</text>
-        <text class="plabel">今日完成</text>
+
+    <scroll-view class="sidebar-list" scroll-y="true">
+      <view wx:for="{{categories}}" wx:key="id"
+            class="sb-item {{currentCat === item.id ? 'active' : ''}}"
+            bindtap="onSelectCategory" data-id="{{item.id}}">
+        <text class="sb-icon">{{item.icon}}</text>
+        <text class="sb-name">{{item.name}}</text>
+        <view class="sb-badge" wx:if="{{item.type === 'group' && item.count > 0}}">{{item.count}}</view>
       </view>
-      <view class="bar">
-        <view class="bar-fill" style="width:{{progress}}%"></view>
-      </view>
-    </view>
-    <view class="quotes">
-      <text class="quote {{quoteFade ? 'show' : ''}}">{{quote.text}}</text>
-      <text class="quote-from {{quoteFade ? 'show' : ''}}">—— {{quote.from}}</text>
+    </scroll-view>
+
+    <view class="sidebar-foot">
+      <text class="sb-date">{{todayLabel}}</text>
     </view>
   </view>
 
-  <!-- 习惯列表 -->
-  <view class="list">
-    <view class="card" wx:for="{{habits}}" wx:key="id">
-      <!-- 左滑删除：右侧隐藏的删除按钮 -->
-      <view class="del-slot" bindtap="removeHabit" data-id="{{item.id}}">删除</view>
-      <!-- 可滑动的内容层 -->
-      <view class="card-slide {{swipedId === item.id ? 'open' : ''}}"
-            data-id="{{item.id}}"
-            bindtouchstart="onSwipeStart" bindtouchmove="onSwipeMove" bindtouchend="onSwipeEnd">
-        <view class="card-row">
-          <view class="card-main">
-            <image class="emoji" style="background:{{item.color}}1a" src="{{item.emoji}}" mode="aspectFit" />
-            <view class="info">
-              <view class="name">{{item.name}}</view>
-              <view class="sub" wx:if="{{item.cue || item.time}}">{{item.time ? item.time + ' · ' : ''}}{{item.cue}}</view>
-              <view class="streak {{item.streak > 0 ? 'on' : ''}}">🔥 连续 {{item.streak}} 天</view>
-            </view>
-          </view>
+  <!-- ===== 右侧内容区 ===== -->
+  <view class="main-area">
 
-          <view class="check {{item.doneToday ? 'done' : ''}} {{item.timing ? 'timing' : ''}}"
-                style="{{item.doneToday ? 'background:' + item.color + ';border-color:' + item.color : (item.timing ? 'border-color:' + item.color : '')}}"
-                bindtap="onToggle" data-id="{{item.id}}">
-            <text wx:if="{{item.doneToday}}" class="ck">✓</text>
-            <text wx:elif="{{item.timing}}" class="cd">{{item.remainingText}}</text>
-            <text wx:elif="{{item.timerMin > 0}}" class="play">▶</text>
-            <!-- 单项打卡星星特效 -->
-            <view class="star-burst" wx:if="{{item.stars && item.stars.length > 0}}">
-              <view wx:for="{{item.stars}}" wx:for-item="s" wx:key="index"
-                    class="star-particle s{{s.dir}}"
-                    style="color:{{s.color}}; animation-delay:{{s.delay}}s;">
-                {{s.emoji}}
+    <!-- ========== 视图A：分类习惯列表 ========== -->
+    <block wx:if="{{currentView === 'habits'}}">
+      <!-- 顶部进度（仅当前分类） -->
+      <view class="hero">
+        <view class="hero-title">
+          <text class="cat-icon">{{currentCatIcon}}</text>
+          <text class="cat-name">{{currentCatName}}</text>
+        </view>
+        <view class="progress-row">
+          <view class="progress-num">
+            <text class="big">{{catDoneCount}}</text><text class="slash">/{{catTotal}}</text>
+            <text class="plabel">今日完成</text>
+          </view>
+          <view class="bar">
+            <view class="bar-fill" style="width:{{catProgress}}%;background:{{currentCatColor}}"></view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 习惯卡片列表 -->
+      <view class="list">
+        <view class="card" wx:for="{{habits}}" wx:key="id">
+          <view class="del-slot" bindtap="removeHabit" data-id="{{item.id}}">删除</view>
+          <view class="card-slide {{swipedId === item.id ? 'open' : ''}}"
+                data-id="{{item.id}}"
+                bindtouchstart="onSwipeStart" bindtouchmove="onSwipeMove" bindtouchend="onSwipeEnd">
+            <view class="card-row">
+              <view class="card-main">
+                <image class="emoji" style="background:{{item.color}}1a" src="{{item.emoji}}" mode="aspectFit" />
+                <view class="info">
+                  <view class="name">{{item.name}}</view>
+                  <view class="sub" wx:if="{{item.cue || item.time}}">{{item.time ? item.time + ' · ' : ''}}{{item.cue}}</view>
+                </view>
+              </view>
+
+              <view class="check {{item.doneToday ? 'done' : ''}} {{item.timing ? 'timing' : ''}}"
+                    style="{{item.doneToday ? 'background:' + item.color + ';border-color:' + item.color : (item.timing ? 'border-color:' + item.color : '')}}"
+                    bindtap="onToggle" data-id="{{item.id}}">
+                <text wx:if="{{item.doneToday}}" class="ck">✓</text>
+                <text wx:elif="{{item.timing}}" class="cd">{{item.remainingText}}</text>
+                <text wx:elif="{{item.timerMin > 0}}" class="play">▶</text>
+                <view class="star-burst" wx:if="{{item.stars && item.stars.length > 0}}">
+                  <view wx:for="{{item.stars}}" wx:for-item="s" wx:key="index"
+                        class="star-particle s{{s.dir}}"
+                        style="color:{{s.color}}; animation-delay:{{s.delay}}s;">
+                    {{s.emoji}}
+                  </view>
+                </view>
+              </view>
+            </view>
+
+            <view class="timer-row" wx:if="{{item.timerMin > 0 && !item.doneToday}}">
+              <view class="timer-bar" wx:if="{{item.timing}}"><view class="timer-bar-fill" style="width:{{item.timerPct}}%;background:{{item.color}}"></view></view>
+              <view class="timer-meta">
+                <text class="timer-text" wx:if="{{item.timing}}">⏱ 计时中 {{item.remainingText}}</text>
+                <text class="timer-hint" wx:else>⏱ 需 {{item.timerMin}} 分钟 · 点右侧 ▶ 开始计时</text>
+                <view class="timer-actions">
+                  <text wx:if="{{item.timing}}" class="timer-cancel" catchtap="onToggle" data-id="{{item.id}}">取消</text>
+                  <text class="timer-done" catchtap="onCompleteNow" data-id="{{item.id}}">直接完成</text>
+                </view>
               </view>
             </view>
           </view>
         </view>
 
-        <view class="dots">
-          <view wx:for="{{item.recent7}}" wx:for-item="d" wx:key="index"
-                class="dot {{d.done ? 'on' : (d.isFuture ? 'future' : 'off')}}" style="{{d.done ? 'background:' + item.color : ''}}"></view>
+        <view class="empty" wx:if="{{habits.length === 0}}">
+          <view class="empty-emoji">🌱</view>
+          <view class="empty-title">这个分类还没有习惯</view>
+          <view class="empty-sub">点击下方按钮添加</view>
         </view>
+      </view>
 
-        <!-- 计时打卡状态行 -->
-        <view class="timer-row" wx:if="{{item.timerMin > 0 && !item.doneToday}}">
-          <view class="timer-bar" wx:if="{{item.timing}}"><view class="timer-bar-fill" style="width:{{item.timerPct}}%;background:{{item.color}}"></view></view>
-          <view class="timer-meta">
-            <text class="timer-text" wx:if="{{item.timing}}">⏱ 计时中 {{item.remainingText}}</text>
-            <text class="timer-hint" wx:else>⏱ 需 {{item.timerMin}} 分钟 · 点右侧 ▶ 开始计时</text>
-            <view class="timer-actions">
-              <text wx:if="{{item.timing}}" class="timer-cancel" catchtap="onToggle" data-id="{{item.id}}">取消</text>
-              <text class="timer-done" catchtap="onCompleteNow" data-id="{{item.id}}">直接完成</text>
+      <!-- 添加按钮 -->
+      <view class="add-wrap">
+        <button class="add-btn {{canAdd ? '' : 'disabled'}}" bindtap="openAdd">
+          ＋ 添加习惯 <text class="quota">{{quotaText}}</text>
+        </button>
+      </view>
+    </block>
+
+    <!-- ========== 视图B：记账 ========== -->
+    <block wx:elif="{{currentView === 'account'}}">
+      <view class="panel-header">
+        <text class="ph-title">📝 记账</text>
+        <text class="ph-sub">记录每一笔开支</text>
+      </view>
+
+      <!-- 本月汇总 -->
+      <view class="summary-cards">
+        <view class="sum-card">
+          <text class="sum-label">本月支出</text>
+          <text class="sum-amount">¥{{monthTotal}}</text>
+        </view>
+        <view class="sum-card">
+          <text class="sum-label">笔数</text>
+          <text class="sum-count">{{monthCount}}</text>
+        </view>
+      </view>
+
+      <!-- 分类统计 -->
+      <view class="section" wx:if="{{catStats.length > 0}}">
+        <text class="sec-title">分类统计</text>
+        <view class="cat-stat-row" wx:for="{{catStats}}" wx:key="id">
+          <text class="cs-icon">{{item.icon}}</text>
+          <text class="cs-name">{{item.name}}</text>
+          <view class="cs-bar-wrap"><view class="cs-bar-fill" style="width:{{item.pct}}%;background:{{item.color}}"></view></view>
+          <text class="cs-amount">¥{{item.amount.toFixed(2)}}</text>
+        </view>
+      </view>
+
+      <!-- 添加记录 -->
+      <view class="add-wrap">
+        <button class="add-btn acc-btn" bindtap="openAccountAdd">＋ 记一笔</button>
+      </view>
+
+      <!-- 账单列表 -->
+      <view class="acc-list" wx:if="{{accounts.length > 0}}">
+        <view class="acc-group" wx:for="{{accountGroups}}" wx:key="date">
+          <text class="acc-date">{{item.date}}</text>
+          <text class="acc-day-total">共 ¥{{item.total.toFixed(2)}}</text>
+          <view class="acc-item" wx:for="{{item.items}}" wx:for-item="rec" wx:key="id">
+            <text class="aci-icon">{{rec.icon}}</text>
+            <view class="aci-info">
+              <text class="aci-note">{{rec.note || rec.catName}}</text>
+              <text class="aci-cat">{{rec.catName}}</text>
             </view>
+            <text class="aci-amount">-¥{{rec.amount.toFixed(2)}}</text>
+            <text class="aci-del" catchtap="delAccount" data-id="{{rec.id}}">✕</text>
           </view>
         </view>
       </view>
-    </view>
 
-    <view class="empty" wx:if="{{habits.length === 0}}">
-      <view class="empty-emoji">🌱</view>
-      <view class="empty-title">还没有习惯</view>
-      <view class="empty-sub">点击下方按钮，添加你的第一个习惯</view>
-    </view>
-  </view>
+      <view class="empty" wx:if="{{accounts.length === 0}}">
+        <view class="empty-emoji">📒</view>
+        <view class="empty-title">还没有记账</view>
+        <view class="empty-sub">点击下方记下第一笔</view>
+      </view>
+    </block>
 
-  <!-- 添加按钮 -->
-  <view class="add-wrap">
-    <button class="add-btn {{canAdd ? '' : 'disabled'}}" bindtap="openAdd">
-      ＋ 添加习惯 <text class="quota">{{quotaText}}</text>
-    </button>
-  </view>
+    <!-- ========== 视图C：便签 ========== -->
+    <block wx:elif="{{currentView === 'notes'}}">
+      <view class="panel-header">
+        <text class="ph-title">📌 便签</text>
+        <text class="ph-sub">随手记，不遗漏</text>
+      </view>
 
-  <!-- 添加弹窗 -->
+      <!-- 便签网格 -->
+      <view class="note-grid">
+        <view class="note-card {{item.done ? 'done' : ''}}" wx:for="{{notes}}" wx:key="id"
+              style="background:{{item.colorHex}}">
+          <view class="nc-top">
+            <text class="nc-pin" wx:if="{{item.pinned}}">📌</text>
+            <text class="nc-del" catchtap="delNote" data-id="{{item.id}}">✕</text>
+          </view>
+          <text class="nc-text {{item.done ? 'done-text' : ''}}" bindtap="toggleNoteDone" data-id="{{item.id}}">{{item.text}}</text>
+          <view class="nc-bot">
+            <text class="nc-time">{{item.timeAgo}}</text>
+            <text class="nc-pin-btn" catchtap="toggleNotePin" data-id="{{item.id}}">{{item.pinned ? '取消置顶' : '置顶'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{notes.length === 0}}">
+        <view class="empty-emoji">📝</view>
+        <view class="empty-title">还没有便签</view>
+        <view class="empty-sub">点击下方创建第一条</view>
+      </view>
+
+      <!-- 添加便签 -->
+      <view class="add-wrap">
+        <button class="add-btn note-btn" bindtap="openNoteAdd">＋ 新建便签</button>
+      </view>
+    </block>
+
+  </view><!-- /main-area -->
+
+  <!-- ===== 添加习惯弹窗 ===== -->
   <view class="mask" wx:if="{{showAdd}}" bindtap="closeAdd">
     <view class="sheet" catchtap="noop">
       <view class="sheet-title">添加习惯</view>
@@ -100,6 +209,17 @@
         <input class="f-input" type="text" placeholder="习惯名称，如：阅读30分钟" placeholder-class="f-ph"
                value="{{form.name}}" bindinput="onNameInput" maxlength="20" confirm-type="next" />
         <text class="err" wx:if="{{nameError}}">{{nameError}}</text>
+      </view>
+
+      <!-- 所属分类 -->
+      <view class="field-label">所属分类</view>
+      <view class="cat-chips">
+        <view wx:for="{{groupCategories}}" wx:key="id"
+              class="cat-chip {{form.category === item.id ? 'sel' : ''}}"
+              style="{{form.category === item.id ? 'background:' + item.color + ';border-color:' + item.color + ';color:#fff' : 'border-color:#ccc'}}"
+              bindtap="selectCategory" data-v="{{item.id}}">
+          {{item.icon}} {{item.name}}
+        </view>
       </view>
 
       <view class="field-label">图标</view>
@@ -148,7 +268,55 @@
     </view>
   </view>
 
-  <!-- 全部完成庆祝特效 -->
+  <!-- ===== 记账弹窗 ===== -->
+  <view class="mask" wx:if="{{showAccAdd}}" bindtap="closeAccAdd">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-title">记一笔</view>
+      <view class="field">
+        <input class="f-input" type="digit" placeholder="金额，如：29.9" placeholder-class="f-ph"
+               value="{{accForm.amount}}" bindinput="onAccAmountInput" />
+      </view>
+      <view class="field-label">分类</view>
+      <view class="cat-chips">
+        <view wx:for="{{accCategories}}" wx:key="id"
+              class="cat-chip {{accForm.categoryId === item.id ? 'sel' : ''}}"
+              style="{{accForm.categoryId === item.id ? 'background:' + item.color + ';border-color:' + item.color + ';color:#fff' : 'border-color:#ccc'}}"
+              bindtap="selectAccCat" data-v="{{item.id}}">
+          {{item.icon}} {{item.name}}
+        </view>
+      </view>
+      <view class="field-label">备注（可选）</view>
+      <input class="f-input" type="text" placeholder="买了什么..." placeholder-class="f-ph"
+             value="{{accForm.note}}" bindinput="onAccNoteInput" />
+      <view class="sheet-actions">
+        <button class="btn ghost" bindtap="closeAccAdd">取消</button>
+        <button class="btn primary" bindtap="confirmAccAdd">保存</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 便签弹窗 ===== -->
+  <view class="mask" wx:if="{{showNoteAdd}}" bindtap="closeNoteAdd">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-title">新建便签</view>
+      <view class="field">
+        <textarea class="ta-input" placeholder="写点什么..." placeholder-class="f-ph"
+                 value="{{noteForm.text}}" bindinput="onNoteTextInput" maxlength="200" auto-height />
+      </view>
+      <view class="field-label">颜色</view>
+      <view class="color-row">
+        <view wx:for="{{noteColors}}" wx:key="id"
+              class="color-opt {{noteForm.colorId === item.id ? 'sel' : ''}}"
+              style="background:{{item.hex}}" bindtap="selectNoteColor" data-v="{{item.id}}"></view>
+      </view>
+      <view class="sheet-actions">
+        <button class="btn ghost" bindtap="closeNoteAdd">取消</button>
+        <button class="btn primary" bindtap="confirmNoteAdd">保存</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 全部完成庆祝特效 ===== -->
   <view class="celebrate" wx:if="{{showCelebrate}}" bindtap="closeCelebrate" catchtouchmove="noop">
     <view class="confetti-layer">
       <view wx:for="{{confetti}}" wx:key="index" class="confetti"

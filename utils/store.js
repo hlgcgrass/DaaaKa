@@ -1,9 +1,19 @@
 // 习惯打卡数据层 —— 参考《原子习惯》：身份认同、习惯堆叠、不打破链条、可视化追踪
 const STORAGE_KEY = 'atomic_habits_v1'
-const MAX_HABITS = 20
+const MAX_HABITS = 30
 
-// 图标：清新可爱扁平风 PNG，存放于 assets/icons/
-// 前 14 个（h21~h34）为用户定制事项图标，排在选择器最前；h01~h20 为通用场景图标
+// ===== 分类系统：左侧侧边栏导航 =====
+// 每个分类包含 id/name/icon/color；特殊 type='tool' 的项（记账/便签）不是习惯分组，而是功能入口
+const CATEGORIES = [
+  { id: 'fitness', name: '增肌运动', icon: '💪', color: '#FF6B6B', type: 'group' },
+  { id: 'health',  name: '健健康康', icon: '❤️', color: '#4ECDC4', type: 'group' },
+  { id: 'growth',  name: '自我提升', icon: '📚', color: '#A29BFE', type: 'group' },
+  { id: 'account', name: '记账',   icon: '📝', color: '#FDCB6E', type: 'tool' },
+  { id: 'notes',   name: '便签',   icon: '📌', color: '#74B9FF', type: 'tool' }
+]
+
+// 图标：清新可爱卡通 PNG，存放于 assets/icons/
+// h21~h34 用户定制事项（排最前）；h01~h20 通用；h35~h50 扩展通用
 const ICONS = [
   '/assets/icons/h21.png', // 练背
   '/assets/icons/h22.png', // 哑铃
@@ -38,7 +48,23 @@ const ICONS = [
   '/assets/icons/h17.png', // 戒手机
   '/assets/icons/h18.png', // 戒烟
   '/assets/icons/h19.png', // 目标
-  '/assets/icons/h20.png'  // 成长
+  '/assets/icons/h20.png', // 成长
+  '/assets/icons/h35.png', // 冥想
+  '/assets/icons/h36.png', // 拉伸
+  '/assets/icons/h37.png', // 散步
+  '/assets/icons/h38.png', // 早睡(新版)
+  '/assets/icons/h39.png', // 早起(新版)
+  '/assets/icons/h40.png', // 写日记
+  '/assets/icons/h41.png', // 护肤
+  '/assets/icons/h42.png', // 做饭
+  '/assets/icons/h43.png', // 整理房间
+  '/assets/icons/h44.png', // 听播客
+  '/assets/icons/h45.png', // 学英语
+  '/assets/icons/h46.png', // 游泳
+  '/assets/icons/h47.png', // 跳绳
+  '/assets/icons/h48.png', // 看书
+  '/assets/icons/h49.png', // 运动
+  '/assets/icons/h50.png'  // 洗澡
 ]
 
 // 习惯名 -> 图标路径（添加习惯时自动预选对应图标）
@@ -56,7 +82,23 @@ const ICON_BY_NAME = {
   '吃vd': '/assets/icons/h31.png',
   '阅读': '/assets/icons/h32.png',
   '备课': '/assets/icons/h33.png',
-  '听课': '/assets/icons/h34.png'
+  '听课': '/assets/icons/h34.png',
+  '冥想': '/assets/icons/h35.png',
+  '拉伸': '/assets/icons/h36.png',
+  '散步': '/assets/icons/h37.png',
+  '早睡': '/assets/icons/h38.png',
+  '早起': '/assets/icons/h39.png',
+  '写日记': '/assets/icons/h40.png',
+  '护肤': '/assets/icons/h41.png',
+  '做饭': '/assets/icons/h42.png',
+  '整理': '/assets/icons/h43.png',
+  '听播客': '/assets/icons/h44.png',
+  '学英语': '/assets/icons/h45.png',
+  '游泳': '/assets/icons/h46.png',
+  '跳绳': '/assets/icons/h47.png',
+  '看书': '/assets/icons/h48.png',
+  '运动': '/assets/icons/h49.png',
+  '洗澡': '/assets/icons/h50.png'
 }
 const COLORS = ['#FF9AA2', '#FFB7B2', '#FFDAC1', '#FAE3B5', '#B5EAD7', '#C7CEEA', '#A8E6CF', '#FFAAA5', '#FFD3B6', '#C8E6FF']
 // 兼容旧字段名（部分代码仍引用 EMOJIS）
@@ -114,6 +156,7 @@ function addHabit(opts) {
     color: opts.color || COLORS[0],
     cue: (opts.cue || '').trim(), // 情境 / 地点
     time: (opts.time || '').trim(), // 时间
+    category: opts.category || 'fitness', // 所属分类（默认增肌运动）
     createdAt: todayStr(),
     timerMin: opts.timerMin || 0, // 计时打卡时长（分钟），0 = 不用计时
     timerStart: 0, // 计时开始的时间戳（ms），0 = 未在计时
@@ -311,8 +354,24 @@ function milestones(records) {
   return achieved
 }
 
+// ===== 分类查询 =====
+function getCategories() { return CATEGORIES }
+
+function getHabitsByCategory(catId) {
+  return getHabits().filter(h => h.category === catId)
+}
+
+// 某分类今日进度
+function categoryTodayProgress(catId) {
+  const list = getHabitsByCategory(catId)
+  const total = list.length
+  const done = list.filter(h => h.records[todayStr()]).length
+  return { done, total }
+}
+
 module.exports = {
   MAX_HABITS, EMOJIS, COLORS, ICON_BY_NAME,
+  CATEGORIES, getCategories, getHabitsByCategory, categoryTodayProgress,
   todayStr, addDays, diffDays,
   getIdentity, setIdentity, getAvatar, setAvatar,
   getHabits, addHabit, removeHabit, updateHabit,

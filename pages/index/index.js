@@ -111,6 +111,9 @@ Page({
       }
       return { id: c.id, name: c.name, icon: c.icon, color: c.color, type: c.type, count: count }
     })
+    // 原底部 tab（统计 / 待办）并入侧边栏，点按跳转到对应页面
+    list.push({ id: 'stats', name: '统计', icon: '📊', color: '#1677ff', type: 'page', page: '/pages/stats/stats', count: 0 })
+    list.push({ id: 'todo', name: '待办', icon: '📋', color: '#722ed1', type: 'page', page: '/pages/todo/todo', count: 0, sep: true })
     var groupCats = list.filter(function (c) { return c.type === 'group' })
     this.setData({ categories: list, groupCategories: groupCats, todayLabel: todayLabel() })
   },
@@ -124,6 +127,8 @@ Page({
   selectCategory: function (catId) {
     var cat = this.data.categories.find(function (c) { return c.id === catId })
     if (!cat) cat = this.data.categories[0]
+    // 统计 / 待办 为独立页面，点击跳转（原为底部 tab，现并入侧边栏）
+    if (cat.type === 'page') { wx.navigateTo({ url: cat.page }); return }
 
     var view = cat.type === 'tool' ? (catId === 'account' ? 'account' : 'notes') : 'habits'
 

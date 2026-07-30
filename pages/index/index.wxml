@@ -7,13 +7,15 @@
     </view>
 
     <scroll-view class="sidebar-list" scroll-y="true">
-      <view wx:for="{{categories}}" wx:key="id"
-            class="sb-item {{currentCat === item.id ? 'active' : ''}}"
-            bindtap="onSelectCategory" data-id="{{item.id}}">
-        <text class="sb-icon">{{item.icon}}</text>
-        <text class="sb-name">{{item.name}}</text>
-        <view class="sb-badge" wx:if="{{item.type === 'group' && item.count > 0}}">{{item.count}}</view>
-      </view>
+      <block wx:for="{{categories}}" wx:key="id">
+        <view class="sb-sep" wx:if="{{item.sep}}"></view>
+        <view class="sb-item {{currentCat === item.id ? 'active' : ''}}"
+              bindtap="onSelectCategory" data-id="{{item.id}}">
+          <text class="sb-icon">{{item.icon}}</text>
+          <text class="sb-name">{{item.name}}</text>
+          <view class="sb-badge" wx:if="{{item.type === 'group' && item.count > 0}}">{{item.count}}</view>
+        </view>
+      </block>
     </scroll-view>
 
     <view class="sidebar-foot">

@@ -10,17 +10,6 @@
     "navigationBarTextStyle": "white",
     "backgroundColor": "#f2f7f4"
   },
-  "tabBar": {
-    "color": "#9aa0a6",
-    "selectedColor": "#07c160",
-    "backgroundColor": "#ffffff",
-    "borderStyle": "black",
-    "list": [
-      { "pagePath": "pages/index/index", "text": "打卡" },
-      { "pagePath": "pages/stats/stats", "text": "统计" },
-      { "pagePath": "pages/todo/todo", "text": "待办" }
-    ]
-  },
   "style": "v2",
   "sitemapLocation": "sitemap.json"
 }

@@ -111,9 +111,13 @@ Page({
       }
       return { id: c.id, name: c.name, icon: c.icon, color: c.color, type: c.type, count: count }
     })
-    // 原底部 tab（统计 / 待办）并入侧边栏，点按跳转到对应页面
-    list.push({ id: 'stats', name: '统计', icon: '📊', color: '#1677ff', type: 'page', page: '/pages/stats/stats', count: 0 })
-    list.push({ id: 'todo', name: '待办', icon: '📋', color: '#722ed1', type: 'page', page: '/pages/todo/todo', count: 0, sep: true })
+    // 统计页：原底部 tab，现并入侧边栏，放在"自我提升(growth)"之后、工具类之前
+    var statsItem = { id: 'stats', name: '统计', icon: '📊', color: '#1677ff', type: 'page', page: '/pages/stats/stats', count: 0 }
+    var gi = -1
+    for (var i = 0; i < list.length; i++) { if (list[i].id === 'growth') { gi = i; break } }
+    if (gi >= 0) list.splice(gi + 1, 0, statsItem)
+    else list.push(statsItem)
+    // 不再添加"待办"页（用户要求删除）
     var groupCats = list.filter(function (c) { return c.type === 'group' })
     this.setData({ categories: list, groupCategories: groupCats, todayLabel: todayLabel() })
   },

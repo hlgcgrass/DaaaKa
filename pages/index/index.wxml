@@ -224,20 +224,24 @@
         </view>
       </view>
 
-      <view class="field-label">图标</view>
-      <scroll-view class="emoji-row" scroll-x="true">
-        <view wx:for="{{emojiList}}" wx:key="*this"
-              class="emoji-opt {{form.emoji === item ? 'sel' : ''}}"
-              bindtap="selectEmoji" data-v="{{item}}">
-          <image class="emoji-opt-img" src="{{item}}" mode="aspectFit" />
+      <view class="opt-block">
+        <view class="field-label">图标</view>
+        <view class="emoji-row">
+          <view wx:for="{{emojiList}}" wx:key="*this"
+                class="emoji-opt {{form.emoji === item ? 'sel' : ''}}"
+                bindtap="selectEmoji" data-v="{{item}}">
+            <image class="emoji-opt-img" src="{{item}}" mode="aspectFit" />
+          </view>
         </view>
-      </scroll-view>
+      </view>
 
-      <view class="field-label">颜色</view>
-      <view class="color-row">
-        <view wx:for="{{colorList}}" wx:key="*this"
-              class="color-opt {{form.color === item ? 'sel' : ''}}"
-              style="background:{{item}}" bindtap="selectColor" data-v="{{item}}"></view>
+      <view class="opt-block">
+        <view class="field-label">颜色</view>
+        <view class="color-row">
+          <view wx:for="{{colorList}}" wx:key="*this"
+                class="color-opt {{form.color === item ? 'sel' : ''}}"
+                style="background:{{item}}" bindtap="selectColor" data-v="{{item}}"></view>
+        </view>
       </view>
 
       <view class="field-label">习惯堆叠（可选）· 让习惯更具体</view>

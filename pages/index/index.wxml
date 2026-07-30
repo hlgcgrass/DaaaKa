@@ -226,26 +226,23 @@
 
       <view class="opt-block">
         <view class="field-label">图标</view>
-        <view class="emoji-row">
+        <scroll-view class="emoji-row" scroll-x="true">
           <view wx:for="{{emojiList}}" wx:key="*this"
                 class="emoji-opt {{form.emoji === item ? 'sel' : ''}}"
                 bindtap="selectEmoji" data-v="{{item}}">
             <image class="emoji-opt-img" src="{{item}}" mode="aspectFit" />
           </view>
-        </view>
+        </scroll-view>
       </view>
 
       <view class="opt-block">
         <view class="field-label">颜色</view>
-        <view class="color-row">
+        <scroll-view class="color-row" scroll-x="true">
           <view wx:for="{{colorList}}" wx:key="*this"
                 class="color-opt {{form.color === item ? 'sel' : ''}}"
                 style="background:{{item}}" bindtap="selectColor" data-v="{{item}}"></view>
-        </view>
+        </scroll-view>
       </view>
-
-      <view class="field-label">习惯堆叠（可选）· 让习惯更具体</view>
-      <view class="stack-preview">我会在 <input class="inline" type="text" placeholder="时间" value="{{form.time}}" bindinput="onTimeInput" /> 在 <input class="inline" type="text" placeholder="地点/情境" value="{{form.cue}}" bindinput="onCueInput" /> 做「{{form.name || '这个习惯'}}」</view>
 
       <view class="field-label">计时打卡（可选）</view>
       <view class="timer-setting">

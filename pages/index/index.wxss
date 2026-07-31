@@ -143,15 +143,14 @@
 .cat-chip.sel{color:#fff}
 
 /* 图标选择（横向滑动折叠） */
-.emoji-row{white-space:nowrap;display:flex;gap:12rpx}
+.emoji-row{white-space:nowrap;display:flex;gap:12rpx;height:80rpx}
 .emoji-opt{display:inline-flex;align-items:center;justify-content:center;width:80rpx;height:80rpx;border-radius:18rpx;background:#fff;border:1rpx solid #eef0ee;flex-shrink:0}
 .emoji-opt-img{width:54rpx;height:54rpx}
 .emoji-opt.sel{background:#07c160;box-shadow:0 0 0 4rpx rgba(7,193,96,0.25)}
 
 /* 颜色选择（横向滑动折叠，与图标一致） */
-.color-row{display:flex;gap:22rpx;white-space:nowrap}
-.color-row > view{flex-shrink:0}
-.color-opt{width:60rpx;height:60rpx;border-radius:50%}
+.color-row{display:flex;flex-wrap:nowrap;gap:22rpx;white-space:nowrap;height:60rpx}
+.color-opt{width:60rpx;height:60rpx;border-radius:50%;flex-shrink:0;display:inline-block}
 .color-opt.sel{box-shadow:0 0 0 4rpx rgba(0,0,0,0.15);border:4rpx solid #fff}
 .inline{display:inline-block;width:130rpx;height:52rpx;line-height:52rpx;border-bottom:2rpx solid #ddd;padding:0 10rpx;text-align:center;font-size:24rpx;vertical-align:middle;background:#fff;border-radius:8rpx 8rpx 0 0}
 .sheet-actions{display:flex;gap:20rpx;margin-top:36rpx;padding-top:8rpx}
@@ -249,3 +248,25 @@
 .nc-bot{display:flex;justify-content:space-between;align-items:center;margin-top:14rpx}
 .nc-time{font-size:18rpx;color:#bbb}
 .nc-pin-btn{font-size:18rpx;color:#07c160}
+
+/* ===== 待办视图样式 ===== */
+.hero-top{display:flex;flex-direction:column}
+.title{font-size:36rpx;font-weight:700}
+.sub.muted{font-size:24rpx;opacity:0.9;margin-top:8rpx}
+
+.todo-card{display:flex;align-items:center;background:#fff;border-radius:20rpx;padding:24rpx;margin-bottom:16rpx;box-shadow:0 2rpx 12rpx rgba(0,0,0,0.04)}
+.todo-check{width:44rpx;height:44rpx;border-radius:50%;border:3rpx solid #d9d9d9;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:26rpx;font-weight:700}
+.todo-check.done{background:#07c160;border-color:#07c160}
+.todo-text{flex:1;margin-left:20rpx;font-size:30rpx;color:#333;word-break:break-all}
+.todo-text.done{color:#bbb;text-decoration:line-through}
+.todo-del{color:#ccc;font-size:32rpx;padding:0 8rpx;flex-shrink:0}
+.todo-del:active{color:#ff5b5b}
+
+.clear-row{text-align:center;margin:8rpx 0 16rpx}
+.clear-btn{font-size:24rpx;color:#999}
+
+.todo-add-wrap{position:fixed;left:170rpx;right:0;bottom:0;display:flex;align-items:center;gap:16rpx;padding:16rpx 24rpx calc(16rpx+env(safe-area-inset-bottom));background:#f2f7f4;border-top:1rpx solid #e6efe9;z-index:10}
+.todo-add-input{flex:1;height:80rpx;background:#fff;border:2rpx solid #e0e0e0;border-radius:40rpx;padding:0 28rpx;font-size:28rpx;color:#333;box-sizing:border-box}
+.todo-add-input:focus{border-color:#07c160}
+.todo-add-btn{flex-shrink:0;background:#07c160;color:#fff;border-radius:40rpx;font-size:28rpx;line-height:80rpx;padding:0 36rpx;margin:0}
+.todo-add-btn::after{border:none}

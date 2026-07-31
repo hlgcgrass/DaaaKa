@@ -1,6 +1,7 @@
 var store = require('../../utils/store.js')
 var accStore = require('../../utils/accountStore.js')
 var noteStore = require('../../utils/noteStore.js')
+var todoStore = require('../../utils/todoStore.js')
 
 var WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
@@ -30,7 +31,7 @@ Page({
     // ===== 侧边栏 =====
     categories: [],
     currentCat: 'fitness',   // 当前选中的分类 id
-    currentView: 'habits',   // habits | account | notes
+    currentView: 'habits',   // habits | account | notes | todo
     currentCatName: '',
     currentCatIcon: '',
     currentCatColor: '',
@@ -73,7 +74,15 @@ Page({
     notes: [],
     noteColors: noteStore.NOTE_COLORS,
     showNoteAdd: false,
-    noteForm: { text: '', colorId: 'yellow' }
+    noteForm: { text: '', colorId: 'yellow' },
+
+    // ===== 待办视图 =====
+    todos: [],
+    todoInput: '',
+    todoTotal: 0,
+    todoDone: 0,
+    todoLeft: 0,
+    todoAllDone: false
   },
 
   onLoad: function () {
@@ -117,7 +126,8 @@ Page({
     for (var i = 0; i < list.length; i++) { if (list[i].id === 'growth') { gi = i; break } }
     if (gi >= 0) list.splice(gi + 1, 0, statsItem)
     else list.push(statsItem)
-    // 不再添加"待办"页（用户要求删除）
+    // 待办清单：在"便签"之后，作为内联视图（与记账/便签一致，不跳页）
+    list.push({ id: 'todo', name: '待办', icon: '📋', color: '#722ed1', type: 'todo', count: 0, sep: true })
     var groupCats = list.filter(function (c) { return c.type === 'group' })
     this.setData({ categories: list, groupCategories: groupCats, todayLabel: todayLabel() })
   },
@@ -131,10 +141,12 @@ Page({
   selectCategory: function (catId) {
     var cat = this.data.categories.find(function (c) { return c.id === catId })
     if (!cat) cat = this.data.categories[0]
-    // 统计 / 待办 为独立页面，点击跳转（原为底部 tab，现并入侧边栏）
+    // 统计 为独立页面，点击跳转（原为底部 tab，现并入侧边栏）
     if (cat.type === 'page') { wx.navigateTo({ url: cat.page }); return }
 
-    var view = cat.type === 'tool' ? (catId === 'account' ? 'account' : 'notes') : 'habits'
+    var view = 'habits'
+    if (cat.type === 'tool') view = (catId === 'account' ? 'account' : 'notes')
+    else if (cat.type === 'todo') view = 'todo'
 
     this.setData({
       currentCat: cat.id,
@@ -150,6 +162,8 @@ Page({
       this.refreshAccount()
     } else if (view === 'notes') {
       this.refreshNotes()
+    } else if (view === 'todo') {
+      this.refreshTodo()
     }
   },
 
@@ -503,5 +517,46 @@ Page({
   delNote: function (e) {
     var id = e.currentTarget.dataset.id, that = this
     wx.showModal({ title: '删除便签', content: '确定删除？', success: function (r) { if (r.confirm) { noteStore.removeNote(id); that.refreshNotes() } } })
+  },
+
+  // ==================== 待办逻辑 ====================
+  refreshTodo: function () {
+    var list = todoStore.getTodos().slice()
+    list.sort(function (a, b) {
+      if (a.done !== b.done) return a.done ? 1 : -1
+      return (b.createdAt || '').localeCompare(a.createdAt || '')
+    })
+    var doneCount = list.filter(function (t) { return t.done }).length
+    var total = list.length
+    this.setData({
+      todos: list, todoTotal: total, todoDone: doneCount,
+      todoLeft: total - doneCount, todoAllDone: total > 0 && doneCount === total
+    })
+  },
+
+  onTodoInput: function (e) { this.setData({ todoInput: e.detail.value }) },
+
+  addTodo: function () {
+    var text = (this.data.todoInput || '').trim()
+    if (!text) { wx.showToast({ title: '写点什么吧', icon: 'none' }); return }
+    todoStore.addTodo(text)
+    this.setData({ todoInput: '' })
+    this.refreshTodo()
+  },
+
+  toggleTodo: function (e) {
+    todoStore.toggleTodo(e.currentTarget.dataset.id)
+    this.refreshTodo()
+  },
+
+  removeTodo: function (e) {
+    var id = e.currentTarget.dataset.id, that = this
+    wx.showModal({ title: '删除待办', content: '确定删除这条待办吗？', success: function (r) { if (r.confirm) { todoStore.removeTodo(id); that.refreshTodo() } } })
+  },
+
+  clearDoneTodo: function () {
+    var that = this
+    if (this.data.todoDone === 0) { wx.showToast({ title: '没有已完成的项', icon: 'none' }); return }
+    wx.showModal({ title: '清除已完成', content: '确定清除 ' + this.data.todoDone + ' 条已完成的待办吗？', success: function (r) { if (r.confirm) { todoStore.clearDone(); that.refreshTodo() } } })
   }
 })

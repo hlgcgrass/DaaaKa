@@ -200,6 +200,49 @@
       </view>
     </block>
 
+    <!-- ========== 视图D：待办清单 ========== -->
+    <block wx:elif="{{currentView === 'todo'}}">
+      <view class="hero">
+        <view class="hero-top">
+          <text class="title">待办清单</text>
+          <text class="sub muted">随手记下，做完勾掉</text>
+        </view>
+        <view class="progress-row">
+          <view class="progress-num">
+            <text class="big">{{todoDone}}</text><text class="slash">/{{todoTotal}}</text>
+            <text class="plabel">已完成</text>
+          </view>
+          <view class="bar"><view class="bar-fill" style="width:{{ todoTotal ? todoDone / todoTotal * 100 : 0 }}%"></view></view>
+        </view>
+      </view>
+
+      <view class="list">
+        <view class="todo-card" wx:for="{{todos}}" wx:key="id">
+          <view class="todo-check {{item.done ? 'done' : ''}}" bindtap="toggleTodo" data-id="{{item.id}}">
+            <text wx:if="{{item.done}}">✓</text>
+          </view>
+          <view class="todo-text {{item.done ? 'done' : ''}}">{{item.text}}</view>
+          <text class="todo-del" catchtap="removeTodo" data-id="{{item.id}}">✕</text>
+        </view>
+
+        <view class="empty" wx:if="{{todoTotal === 0}}">
+          <view class="empty-emoji">📝</view>
+          <view class="empty-title">还没有待办</view>
+          <view class="empty-sub">在下方输入框写一条，回车或点「添加」</view>
+        </view>
+      </view>
+
+      <view class="clear-row" wx:if="{{todoDone > 0}}">
+        <text class="clear-btn" bindtap="clearDoneTodo">清除已完成的 {{todoDone}} 项</text>
+      </view>
+
+      <view class="todo-add-wrap">
+        <input class="todo-add-input" type="text" placeholder="写一条待办…" value="{{todoInput}}"
+               bindinput="onTodoInput" confirm-type="done" bindconfirm="addTodo" maxlength="100" />
+        <button class="todo-add-btn" bindtap="addTodo">添加</button>
+      </view>
+    </block>
+
   </view><!-- /main-area -->
 
   <!-- ===== 添加习惯弹窗 ===== -->

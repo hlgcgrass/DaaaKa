@@ -79,12 +79,10 @@
 
             <view class="timer-row" wx:if="{{item.timerMin > 0 && !item.doneToday}}">
               <view class="timer-bar" wx:if="{{item.timing}}"><view class="timer-bar-fill" style="width:{{item.timerPct}}%;background:{{item.color}}"></view></view>
-              <view class="timer-meta">
-                <text class="timer-text" wx:if="{{item.timing}}">⏱ 计时中 {{item.remainingText}}</text>
-                <text class="timer-hint" wx:else>⏱ 需 {{item.timerMin}} 分钟 · 点右侧 ▶ 开始计时</text>
+              <view class="timer-meta" wx:if="{{item.timing}}">
+                <text class="timer-text">⏱ 计时中 {{item.remainingText}}</text>
                 <view class="timer-actions">
-                  <text wx:if="{{item.timing}}" class="timer-cancel" catchtap="onToggle" data-id="{{item.id}}">取消</text>
-                  <text class="timer-done" catchtap="onCompleteNow" data-id="{{item.id}}">直接完成</text>
+                  <text class="timer-cancel" catchtap="onToggle" data-id="{{item.id}}">取消</text>
                 </view>
               </view>
             </view>
@@ -240,6 +238,35 @@
         <input class="todo-add-input" type="text" placeholder="写一条待办…" value="{{todoInput}}"
                bindinput="onTodoInput" confirm-type="done" bindconfirm="addTodo" maxlength="100" />
         <button class="todo-add-btn" bindtap="addTodo">添加</button>
+      </view>
+    </block>
+
+    <!-- ========== 视图E：教育时政 ========== -->
+    <block wx:elif="{{currentView === 'education'}}">
+      <view class="panel-header">
+        <text class="ph-title">📰 教育时政</text>
+        <text class="ph-sub">每日 08:00 自动更新最新政策新闻</text>
+      </view>
+
+      <view class="edu-meta" wx:if="{{eduDate}}">
+        <text class="edu-date">更新于 {{eduDate}}</text>
+        <text class="edu-tag {{eduSource === 'real' ? 'real' : (eduSource === 'fallback' ? 'fallback' : 'err')}}">{{eduSource === 'real' ? '真实来源' : (eduSource === 'fallback' ? '示例数据' : '加载异常')}}</text>
+      </view>
+
+      <view class="edu-list" wx:if="{{eduNews.length > 0}}">
+        <view class="edu-item" wx:for="{{eduNews}}" wx:key="title" bindtap="openEduLink" data-url="{{item.url}}">
+          <view class="edu-dot"></view>
+          <view class="edu-body">
+            <text class="edu-title">{{item.title}}</text>
+            <text class="edu-src">{{item.source || '教育政策'}}</text>
+          </view>
+          <text class="edu-arrow">›</text>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{eduLoading}}">
+        <view class="empty-emoji">📰</view>
+        <view class="empty-title">正在获取最新政策新闻…</view>
       </view>
     </block>
 

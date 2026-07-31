@@ -82,7 +82,13 @@ Page({
     todoTotal: 0,
     todoDone: 0,
     todoLeft: 0,
-    todoAllDone: false
+    todoAllDone: false,
+
+    // ===== 教育时政视图 =====
+    eduNews: [],
+    eduDate: '',
+    eduSource: '',
+    eduLoading: false
   },
 
   onLoad: function () {
@@ -127,7 +133,9 @@ Page({
     if (gi >= 0) list.splice(gi + 1, 0, statsItem)
     else list.push(statsItem)
     // 待办清单：在"便签"之后，作为内联视图（与记账/便签一致，不跳页）
-    list.push({ id: 'todo', name: '待办', icon: '📋', color: '#722ed1', type: 'todo', count: 0, sep: true })
+    list.push({ id: 'todo', name: '待办', icon: '📋', color: '#722ed1', type: 'todo', count: 0 })
+    // 教育时政：在"待办"之后，内联视图，由云函数每日 08:00 更新真实政策新闻
+    list.push({ id: 'education', name: '教育时政', icon: '📰', color: '#d4380d', type: 'education', count: 0 })
     var groupCats = list.filter(function (c) { return c.type === 'group' })
     this.setData({ categories: list, groupCategories: groupCats, todayLabel: todayLabel() })
   },
@@ -147,6 +155,7 @@ Page({
     var view = 'habits'
     if (cat.type === 'tool') view = (catId === 'account' ? 'account' : 'notes')
     else if (cat.type === 'todo') view = 'todo'
+    else if (cat.type === 'education') view = 'education'
 
     this.setData({
       currentCat: cat.id,
@@ -164,6 +173,8 @@ Page({
       this.refreshNotes()
     } else if (view === 'todo') {
       this.refreshTodo()
+    } else if (view === 'education') {
+      this.refreshEducation()
     }
   },
 
@@ -558,5 +569,39 @@ Page({
     var that = this
     if (this.data.todoDone === 0) { wx.showToast({ title: '没有已完成的项', icon: 'none' }); return }
     wx.showModal({ title: '清除已完成', content: '确定清除 ' + this.data.todoDone + ' 条已完成的待办吗？', success: function (r) { if (r.confirm) { todoStore.clearDone(); that.refreshTodo() } } })
+  },
+
+  // ==================== 教育时政逻辑 ====================
+  refreshEducation: function () {
+    var that = this
+    this.setData({ eduLoading: true })
+    if (!wx.cloud) {
+      this.setData({ eduLoading: false, eduSource: 'error', eduNews: [{ title: '云能力不可用，请升级微信基础库', url: '', source: '提示' }] })
+      return
+    }
+    wx.cloud.callFunction({ name: 'eduNews' }).then(function (res) {
+      var r = (res && res.result) || {}
+      that.setData({
+        eduLoading: false,
+        eduDate: r.date || '',
+        eduSource: r.source || '',
+        eduNews: r.items || []
+      })
+    }).catch(function () {
+      that.setData({
+        eduLoading: false,
+        eduSource: 'error',
+        eduNews: [{ title: '教育时政加载失败：请确认云环境已配置并部署 eduNews 云函数', url: '', source: '提示' }]
+      })
+    })
+  },
+
+  openEduLink: function (e) {
+    var url = e.currentTarget.dataset.url
+    if (!url) return
+    wx.setClipboardData({
+      data: url,
+      success: function () { wx.showToast({ title: '链接已复制，去浏览器查看', icon: 'none' }) }
+    })
   }
 })

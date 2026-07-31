@@ -1,5 +1,6 @@
 {
   "miniprogramRoot": "./",
+  "cloudfunctionRoot": "cloudfunctions/",
   "projectname": "miniprogram-todo",
   "appid": "wx74cf1625553c595b",
   "description": "工具效率类小程序 - 待办清单。上传前请把 appid 改为你的真实 AppID（或在 CI 脚本中用环境变量 WX_APPID 覆盖）。",

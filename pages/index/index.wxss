@@ -270,3 +270,19 @@
 .todo-add-input:focus{border-color:#07c160}
 .todo-add-btn{flex-shrink:0;background:#07c160;color:#fff;border-radius:40rpx;font-size:28rpx;line-height:80rpx;padding:0 36rpx;margin:0}
 .todo-add-btn::after{border:none}
+
+/* ===== 教育时政视图样式 ===== */
+.edu-meta{display:flex;align-items:center;justify-content:space-between;padding:8rpx 8rpx 16rpx}
+.edu-date{font-size:24rpx;color:#999}
+.edu-tag{font-size:22rpx;padding:4rpx 16rpx;border-radius:20rpx}
+.edu-tag.real{background:#e8f8ee;color:#07c160}
+.edu-tag.fallback{background:#fff7e6;color:#fa8c16}
+.edu-tag.err{background:#fff1f0;color:#f5222d}
+.edu-list{display:flex;flex-direction:column}
+.edu-item{display:flex;align-items:flex-start;padding:24rpx 8rpx;border-bottom:1rpx solid #f0f0f0;background:#fff}
+.edu-item:active{background:#fafafa}
+.edu-dot{width:14rpx;height:14rpx;border-radius:50%;background:#d4380d;margin-top:12rpx;margin-right:20rpx;flex-shrink:0}
+.edu-body{flex:1;display:flex;flex-direction:column}
+.edu-title{font-size:28rpx;color:#222;line-height:1.5}
+.edu-src{font-size:22rpx;color:#999;margin-top:8rpx}
+.edu-arrow{color:#ccc;font-size:36rpx;margin-left:10rpx;flex-shrink:0}

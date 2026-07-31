@@ -250,17 +250,33 @@
 
       <view class="edu-meta" wx:if="{{eduDate}}">
         <text class="edu-date">更新于 {{eduDate}}</text>
-        <text class="edu-tag {{eduSource === 'real' ? 'real' : (eduSource === 'fallback' ? 'fallback' : 'err')}}">{{eduSource === 'real' ? '真实来源' : (eduSource === 'fallback' ? '示例数据' : '加载异常')}}</text>
+        <text class="edu-tag {{eduSource === 'real' ? 'real' : (eduSource === 'fallback' ? 'fallback' : (eduSource === 'builtin' ? 'builtin' : 'err'))}}">{{eduSource === 'real' ? '实时更新' : (eduSource === 'fallback' ? '示例数据' : (eduSource === 'builtin' ? '政策资讯' : '加载异常'))}}</text>
       </view>
 
       <view class="edu-list" wx:if="{{eduNews.length > 0}}">
-        <view class="edu-item" wx:for="{{eduNews}}" wx:key="title" bindtap="openEduLink" data-url="{{item.url}}">
+        <view class="edu-item" wx:for="{{eduNews}}" wx:key="title" bindtap="showEduDetail" data-idx="{{index}}">
           <view class="edu-dot"></view>
           <view class="edu-body">
             <text class="edu-title">{{item.title}}</text>
             <text class="edu-src">{{item.source || '教育政策'}}</text>
           </view>
           <text class="edu-arrow">›</text>
+        </view>
+      </view>
+
+      <!-- 新闻详情弹窗 -->
+      <view class="mask" wx:if="{{eduDetailShow}}" bindtap="closeEduDetail">
+        <view class="sheet edu-detail-sheet" catchtap="noop">
+          <view class="edu-detail-header">
+            <text class="edu-detail-title">{{eduDetailItem.title}}</text>
+            <text class="edu-detail-src">{{eduDetailItem.source}} · {{eduDetailItem.date}}</text>
+          </view>
+          <scroll-view scroll-y class="edu-detail-body">
+            <text class="edu-detail-content">{{eduDetailItem.content}}</text>
+          </scroll-view>
+          <view class="sheet-actions">
+            <button class="btn ghost" bindtap="closeEduDetail">关闭</button>
+          </view>
         </view>
       </view>
 

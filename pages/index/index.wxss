@@ -122,20 +122,20 @@
 .mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);display:flex;align-items:flex-end;z-index:50}
 .sheet{background:#fff;width:100%;border-radius:32rpx 32rpx 0 0;padding:40rpx 56rpx calc(56rpx+env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto;box-sizing:border-box}
 .sheet-title{font-size:36rpx;font-weight:700;text-align:center;margin-top:20rpx;margin-bottom:36rpx;color:#222}
-.field{margin-bottom:28rpx}
+.field{margin:0 24rpx 28rpx}
 .f-input{width:100%;height:88rpx;background:#f7f7f7;border:2rpx solid #e8e8e8;border-radius:16rpx;padding:0 32rpx;font-size:30rpx;box-sizing:border-box;color:#333;line-height:88rpx}
 .f-input:focus{border-color:#07c160;background:#fff}
 .ta-input{width:100%;min-height:140rpx;background:#f7f7f7;border:2rpx solid #e8e8e8;border-radius:16rpx;padding:24rpx 32rpx;font-size:28rpx;box-sizing:border-box;color:#333;line-height:1.6}
 .f-ph{color:#bbb;font-size:28rpx}
 .err{color:#e91e63;font-size:24rpx;margin-top:8rpx;display:block}
-.field-label{font-size:27rpx;color:#444;margin:30rpx 0 16rpx;font-weight:600;padding-left:12rpx}
+.field-label{font-size:27rpx;color:#444;margin:30rpx 0 16rpx;font-weight:600;padding-left:24rpx}
 
 /* 选项分区卡片（图标/颜色等区块统一外框） */
-.opt-block{background:#fafbfa;border:1rpx solid #eef0ee;border-radius:18rpx;padding:28rpx 28rpx 30rpx;margin-bottom:24rpx}
+.opt-block{background:#fafbfa;border:1rpx solid #eef0ee;border-radius:18rpx;padding:28rpx 28rpx 30rpx;margin:0 24rpx 24rpx}
 .opt-block .field-label{margin-top:0;padding-left:0}
 
 /* 分类选择 chips（添加弹窗） */
-.cat-chips{display:flex;flex-wrap:wrap;gap:14rpx;padding-left:12rpx}
+.cat-chips{display:flex;flex-wrap:wrap;gap:14rpx;padding-left:24rpx}
 .cat-chip{
   padding:12rpx 26rpx;background:#fff;border:2rpx solid #e0e0e0;
   border-radius:44rpx;font-size:25rpx;color:#555;transition:all 0.15s
@@ -177,7 +177,7 @@
 .timer-actions{display:flex;align-items:center;gap:14rpx;margin-left:auto}
 .timer-cancel{font-size:22rpx;color:#ff5b5b;padding:4rpx 8rpx}
 .timer-done{font-size:22rpx;color:#07c160;padding:4rpx 16rpx;border:2rpx solid #07c160;border-radius:24rpx}
-.timer-setting{background:#fafafa;border-radius:16rpx;padding:22rpx;margin-bottom:20rpx;border:1rpx solid #eee}
+.timer-setting{background:#fafafa;border-radius:16rpx;padding:22rpx;margin:0 24rpx 20rpx;border:1rpx solid #eee}
 .switch-line{display:flex;align-items:center;justify-content:space-between}
 .ts-label{font-size:28rpx;color:#333}
 .min-row{display:flex;align-items:center;margin-top:16rpx}
@@ -289,9 +289,9 @@
 .edu-arrow{color:#ccc;font-size:36rpx;margin-left:10rpx;flex-shrink:0}
 
 /* 教育时政 - 详情弹窗 */
-.edu-detail-sheet{max-height:80vh}
-.edu-detail-header{margin-bottom:24rpx;border-bottom:1rpx solid #eee;padding-bottom:20rpx}
-.edu-detail-title{font-size:32rpx;color:#111;font-weight:700;line-height:1.5;display:block;margin-bottom:12rpx}
-.edu-detail-src{font-size:23rpx;color:#999}
-.edu-detail-body{max-height:50vh;padding:0 4rpx}
-.edu-detail-content{font-size:28rpx;color:#333;line-height:1.9;white-space:pre-wrap;word-break:break-all}
+.edu-detail-sheet{max-height:82vh;padding:56rpx 64rpx calc(40rpx+env(safe-area-inset-bottom))}
+.edu-detail-header{margin-bottom:28rpx;border-bottom:1rpx solid #eee;padding-bottom:24rpx}
+.edu-detail-title{font-size:34rpx;color:#111;font-weight:700;line-height:1.55;display:block;margin-bottom:16rpx}
+.edu-detail-src{font-size:24rpx;color:#999}
+.edu-detail-body{max-height:54vh;padding:8rpx 0 0;margin-top:12rpx}
+.edu-detail-content{font-size:29rpx;color:#333;line-height:2.0;white-space:pre-wrap;word-break:break-all;letter-spacing:0.5rpx}

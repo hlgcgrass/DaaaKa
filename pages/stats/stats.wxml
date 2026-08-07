@@ -73,7 +73,7 @@
       <view class="hcard-head">
         <image class="h-emoji" src="{{item.emoji}}" mode="aspectFit" />
         <text class="h-name">{{item.name}}</text>
-        <text class="h-meta">🔥{{item.streak}}天 · 🏆{{item.best}}天 · 共{{item.count}}天</text>
+        <text class="h-meta">🔥{{item.streak}}天 · 🏆{{item.best}}天 · 共{{item.count}}天<text wx:if="{{item.isTimer}}"> · ⏱{{item.totalDurationText}}</text><text wx:if="{{item.isCount}}"> · ✓{{item.totalCount}}次</text></text>
       </view>
 
       <!-- 打卡链条（今天在最左，往右=过去） -->

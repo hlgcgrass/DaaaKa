@@ -74,6 +74,11 @@
                   <text wx:if="{{item.count > 0}}" class="ct">{{item.count}}</text>
                   <text wx:else class="ct-plus">＋</text>
                 </view>
+                <view wx:if="{{!item.timerEnabled && !item.countEnabled}}" class="check {{item.doneToday ? 'done' : ''}}"
+                      style="{{item.doneToday ? 'background:' + item.color + ';border-color:' + item.color : ''}}"
+                      bindtap="onToggle" data-id="{{item.id}}">
+                  <text wx:if="{{item.doneToday}}" class="ck">✓</text>
+                </view>
                 <view class="star-burst" wx:if="{{item.stars && item.stars.length > 0}}">
                   <view wx:for="{{item.stars}}" wx:for-item="s" wx:key="index"
                         class="star-particle s{{s.dir}}"
@@ -326,15 +331,6 @@
                 bindtap="selectEmoji" data-v="{{item}}">
             <image class="emoji-opt-img" src="{{item}}" mode="aspectFit" />
           </view>
-        </scroll-view>
-      </view>
-
-      <view class="opt-block">
-        <view class="field-label">颜色</view>
-        <scroll-view class="color-row" scroll-x="true">
-          <view wx:for="{{colorList}}" wx:key="*this"
-                class="color-opt {{form.color === item ? 'sel' : ''}}"
-                style="background:{{item}}" bindtap="selectColor" data-v="{{item}}"></view>
         </scroll-view>
       </view>
 

@@ -135,7 +135,7 @@ function addHabit(opts) {
     id: 'h_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     name: (opts.name || '').trim(),
     emoji: opts.emoji || EMOJIS[0],
-    color: opts.color || COLORS[0],
+    color: opts.color || COLORS[COLORS.length - 1],
     cue: (opts.cue || '').trim(), // 情境 / 地点
     time: (opts.time || '').trim(), // 时间
     category: opts.category || 'fitness', // 所属分类（默认增肌运动）

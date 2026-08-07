@@ -1,5 +1,12 @@
 const store = require('../../utils/store.js')
 
+function fmtSec(s) {
+  s = Math.max(0, s | 0)
+  var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60
+  if (h > 0) return h + ':' + String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0')
+  return String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0')
+}
+
 Page({
   data: {
     identity: '',
@@ -31,6 +38,13 @@ Page({
     const list = habits.map(h => {
       const streak = store.calcStreak(h.records)
       const count = Object.keys(h.records).filter(k => h.records[k]).length
+      const isTimer = !!(h.timerEnabled || (h.timerMin > 0))
+      const isCount = !!h.countEnabled
+      const durations = h.durations || {}
+      const totalDurationSec = Object.keys(durations).reduce((sum, k) => sum + (durations[k] || 0), 0)
+      const totalCount = isCount
+        ? Object.keys(h.records).reduce((sum, k) => sum + (typeof h.records[k] === 'number' ? h.records[k] : 0), 0)
+        : count
       return {
         id: h.id,
         name: h.name,
@@ -39,6 +53,11 @@ Page({
         streak: streak,
         best: store.calcBest(h.records),
         count: count,
+        isTimer: isTimer,
+        isCount: isCount,
+        totalDurationSec: totalDurationSec,
+        totalDurationText: fmtSec(totalDurationSec),
+        totalCount: totalCount,
         chain: store.habitChain(h.records, 14),
         msg: store.chainMessage(streak, count, h.name),
         badges: store.milestones(h.records)

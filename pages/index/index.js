@@ -47,7 +47,7 @@ Page({
     colorList: store.COLORS,
     groupCategories: [],     // 仅 type=group 的分类（用于添加弹窗选择）
     form: {
-      name: '', emoji: store.EMOJIS[0], color: store.COLORS[0],
+      name: '', emoji: store.EMOJIS[0], color: store.COLORS[store.COLORS.length - 1],
       cue: '', time: '', category: 'fitness',
       timerEnabled: false, timerMin: 30
     },
@@ -189,7 +189,7 @@ Page({
       var tm = h.timerMin || 0
       var enabled = !!(h.timerEnabled || tm > 0)
       var targetSec = tm * 60
-      var running = enabled && h.timerStart && h.timerDate === t && !h.records[t]
+      var running = enabled && h.timerStart && h.timerDate === t
       var timing = false, elapsedSec = 0, elapsedText = '', timerPct = 0
       if (running) {
         elapsedSec = Math.floor((Date.now() - h.timerStart) / 1000)
@@ -201,7 +201,7 @@ Page({
       return {
         id: h.id, name: h.name, emoji: h.emoji, color: h.color,
         cue: h.cue, time: h.time,
-        doneToday: !!h.records[t],
+        doneToday: h.countEnabled ? (typeof h.records[t] === 'number' && h.records[t] > 0) : !!h.records[t],
         countEnabled: !!h.countEnabled,
         count: count,
         timerEnabled: enabled,
@@ -247,7 +247,7 @@ Page({
     for (var i = 0; i < list.length; i++) {
       var h = list[i]
       if (h.timerEnabled || h.timerMin > 0) {
-        if (h.timerStart && h.timerDate === t && !h.doneToday) {
+        if (h.timerStart && h.timerDate === t) {
           var elapsed = Math.floor((now - h.timerStart) / 1000)
           var tSec = (h.timerMin || 0) * 60
           updates['habits[' + i + '].elapsedSec'] = elapsed
@@ -261,6 +261,14 @@ Page({
   },
 
   // ===== 打卡/计时操作 =====
+  // 普通习惯（既不计时也不计次）：点击圆圈完成 / 取消完成
+  onToggle: function (e) {
+    var id = e.currentTarget.dataset.id
+    store.toggleToday(id)
+    this.refreshHabits(this.data.currentCat)
+    this.triggerStars(id)
+  },
+
   // ▶ 按钮：计时（开始 / 完成 / 取消）。同时开启计次时，完成计时会自动 +1 次数
   onPlay: function (e) {
     var id = e.currentTarget.dataset.id
@@ -345,7 +353,7 @@ Page({
     this.setData({
       showAdd: true,
       form: {
-        name: '', emoji: store.EMOJIS[0], color: store.COLORS[0],
+        name: '', emoji: store.EMOJIS[0], color: store.COLORS[store.COLORS.length - 1],
         cue: '', time: '', category: this.data.currentCat,
         timerEnabled: false, timerMin: 0, countEnabled: false
       },

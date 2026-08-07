@@ -26,6 +26,14 @@
 .muted { color: #aaa; }
 .empty { text-align: center; font-size: 28rpx; padding: 40rpx 0; }
 
+/* 专题分组 */
+.cat-section { margin-top: 28rpx; }
+.cat-head { display: flex; align-items: center; background: #fff; border-radius: 16rpx; padding: 20rpx 24rpx; margin-bottom: 16rpx; border-left: 8rpx solid #07c160; box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04); }
+.cat-icon { font-size: 36rpx; margin-right: 14rpx; }
+.cat-name { font-size: 32rpx; font-weight: 700; color: #333; }
+.cat-prog { margin-left: auto; font-size: 24rpx; color: #999; }
+.cat-arrow { font-size: 24rpx; color: #999; margin-left: 16rpx; }
+
 /* 打卡日历 */
 .cal-card { background: #fff; border-radius: 20rpx; padding: 24rpx; box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04); }
 .cal-head { display: flex; align-items: center; justify-content: space-between; }

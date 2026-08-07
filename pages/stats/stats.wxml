@@ -3,7 +3,7 @@
   <view class="overview">
     <view class="ov-item"><text class="ov-num">{{done}}/{{total}}</text><text class="ov-label">今日打卡</text></view>
     <view class="ov-item"><text class="ov-num">{{rate}}%</text><text class="ov-label">完成率</text></view>
-    <view class="ov-item"><text class="ov-num">{{habits.length}}</text><text class="ov-label">习惯数</text></view>
+    <view class="ov-item"><text class="ov-num">{{total}}</text><text class="ov-label">习惯数</text></view>
   </view>
 
   <!-- 打卡日历 -->
@@ -36,40 +36,48 @@
     </view>
   </view>
 
-  <!-- 习惯轨迹：《原子习惯》不要打断链条 -->
-  <view class="section-title">习惯轨迹</view>
-  <view class="habits">
-    <view class="hcard" wx:for="{{habits}}" wx:key="id">
-      <!-- 头部：emoji + 名称 + 数据 -->
-      <view class="hcard-head">
-        <image class="h-emoji" src="{{item.emoji}}" mode="aspectFit" />
-        <text class="h-name">{{item.name}}</text>
-        <text class="h-meta">🔥{{item.streak}}天 · 🏆{{item.best}}天 · 共{{item.count}}天<text wx:if="{{item.isTimer}}"> · ⏱今日{{item.todayDurationText}}</text><text wx:if="{{item.isCount}}"> · ✓{{item.totalCount}}次</text></text>
-      </view>
-
-      <!-- 打卡链条（今天在最左，往右=过去） -->
-      <view class="chain-wrap">
-        <scroll-view class="chain-scroll" scroll-x="true" show-scrollbar="{{false}}">
-          <view class="chain">
-            <view wx:for="{{item.chain}}" wx:for-item="c" wx:key="date"
-                  class="link {{c.done ? 'done' : ''}} {{c.isToday ? 'today' : ''}}"
-                  style="{{c.done ? 'background:' + item.color : ''}}">
-              <text wx:if="{{c.isToday}}" class="link-today">今</text>
-            </view>
-          </view>
-        </scroll-view>
-      </view>
-
-      <!-- 每日计时时长（最近 7 天） -->
-      <view class="dur-week" wx:if="{{item.isTimer}}">
-        <view class="dur-row" wx:for="{{item.week}}" wx:for-item="w" wx:key="label">
-          <text class="dur-day">{{w.label}}</text>
-          <text class="dur-val {{w.has ? 'on' : ''}}">{{w.text}}</text>
-        </view>
-      </view>
-
+  <!-- 专题统计：按分类分组 -->
+  <view class="section-title">专题统计</view>
+  <view class="cat-section" wx:for="{{categorySections}}" wx:key="id" wx:for-item="cat">
+    <view class="cat-head" bindtap="toggleCat" data-idx="{{index}}" style="border-left-color:{{cat.color}}">
+      <text class="cat-icon">{{cat.icon}}</text>
+      <text class="cat-name">{{cat.name}}</text>
+      <text class="cat-prog">今日 {{cat.done}}/{{cat.total}}</text>
+      <text class="cat-arrow">{{cat.expanded ? '▲' : '▼'}}</text>
     </view>
-    <view class="empty muted" wx:if="{{habits.length === 0}}">还没有习惯，去「打卡」页添加吧</view>
+    <view class="habits" wx:if="{{cat.expanded && cat.habits.length > 0}}">
+      <view class="hcard" wx:for="{{cat.habits}}" wx:key="id" wx:for-item="item">
+        <!-- 头部：emoji + 名称 + 数据 -->
+        <view class="hcard-head">
+          <image class="h-emoji" src="{{item.emoji}}" mode="aspectFit" />
+          <text class="h-name">{{item.name}}</text>
+          <text class="h-meta">🔥{{item.streak}}天 · 🏆{{item.best}}天 · 共{{item.count}}天<text wx:if="{{item.isTimer}}"> · ⏱今日{{item.todayDurationText}}</text><text wx:if="{{item.isCount}}"> · ✓{{item.totalCount}}次</text></text>
+        </view>
+
+        <!-- 打卡链条（今天在最左，往右=过去） -->
+        <view class="chain-wrap">
+          <scroll-view class="chain-scroll" scroll-x="true" show-scrollbar="{{false}}">
+            <view class="chain">
+              <view wx:for="{{item.chain}}" wx:for-item="c" wx:key="date"
+                    class="link {{c.done ? 'done' : ''}} {{c.isToday ? 'today' : ''}}"
+                    style="{{c.done ? 'background:' + item.color : ''}}">
+                <text wx:if="{{c.isToday}}" class="link-today">今</text>
+              </view>
+            </view>
+          </scroll-view>
+        </view>
+
+        <!-- 每日计时时长（最近 7 天） -->
+        <view class="dur-week" wx:if="{{item.isTimer}}">
+          <view class="dur-row" wx:for="{{item.week}}" wx:for-item="w" wx:key="label">
+            <text class="dur-day">{{w.label}}</text>
+            <text class="dur-val {{w.has ? 'on' : ''}}">{{w.text}}</text>
+          </view>
+        </view>
+
+      </view>
+    </view>
+    <view class="empty muted" wx:elif="{{cat.expanded}}">该专题还没有打卡事项</view>
   </view>
 
   <!-- 数据管理 -->

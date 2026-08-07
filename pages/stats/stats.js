@@ -21,7 +21,7 @@ Page({
     total: 0,
     done: 0,
     rate: 0,
-    habits: [],
+    categorySections: [],
     year: new Date().getFullYear(),
     weekHeads: ['日', '一', '二', '三', '四', '五', '六'],
     calYear: 0,
@@ -41,13 +41,15 @@ Page({
     const total = habits.length
     const prog = store.todayProgress()
     const rate = total ? Math.round(prog.done / total * 100) : 0
-    const list = habits.map(h => {
+
+    // 把单个习惯映射成展示对象
+    function mapHabit(h) {
+      const today = store.todayStr()
       const streak = store.calcStreak(h.records)
       const count = Object.keys(h.records).filter(k => h.records[k]).length
       const isTimer = !!(h.timerEnabled || (h.timerMin > 0))
       const isCount = !!h.countEnabled
       const durations = h.durations || {}
-      const today = store.todayStr()
       const totalDurationSec = Object.keys(durations).reduce((sum, k) => sum + (durations[k] || 0), 0)
       const todayDurationSec = durations[today] || 0
       const week = []
@@ -73,6 +75,7 @@ Page({
         streak: streak,
         best: store.calcBest(h.records),
         count: count,
+        doneToday: !!h.records[today],
         isTimer: isTimer,
         isCount: isCount,
         totalDurationSec: totalDurationSec,
@@ -83,7 +86,25 @@ Page({
         totalCount: totalCount,
         chain: store.habitChain(h.records, 14)
       }
+    }
+
+    // 按专题（分类）分组：仅取 type='group' 的三个习惯分组
+    const cats = store.getCategories().filter(function (c) { return c.type === 'group' })
+    const categorySections = cats.map(function (cat) {
+      const list = habits.filter(function (h) { return h.category === cat.id }).map(mapHabit)
+      const done = list.filter(function (h) { return h.doneToday }).length
+      return {
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon,
+        color: cat.color,
+        total: list.length,
+        done: done,
+        expanded: true,
+        habits: list
+      }
     })
+
     let y = this.data.calYear
     let m = this.data.calMonth
     if (!y) { const now = new Date(); y = now.getFullYear(); m = now.getMonth() }
@@ -92,7 +113,7 @@ Page({
       total: total,
       done: prog.done,
       rate: rate,
-      habits: list,
+      categorySections: categorySections,
       year: new Date().getFullYear()
     })
   },
@@ -134,6 +155,14 @@ Page({
 
   toggleCalendar: function () {
     this.setData({ calendarExpanded: !this.data.calendarExpanded })
+  },
+
+  // 专题折叠 / 展开
+  toggleCat: function (e) {
+    const idx = e.currentTarget.dataset.idx
+    if (idx == null) return
+    const key = 'categorySections[' + idx + '].expanded'
+    this.setData({ [key]: !this.data.categorySections[idx].expanded })
   },
 
   onCalTouchStart: function (e) {

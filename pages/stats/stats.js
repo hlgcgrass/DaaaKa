@@ -7,12 +7,17 @@ function fmtSec(s) {
   return String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0')
 }
 
+// YYYY-MM-DD 偏移 n 天
+function dayOffset(dateStr, delta) {
+  var p = function (n) { return String(n).padStart(2, '0') }
+  var parts = dateStr.split('-').map(Number)
+  var dt = new Date(parts[0], parts[1] - 1, parts[2])
+  dt.setDate(dt.getDate() + delta)
+  return dt.getFullYear() + '-' + p(dt.getMonth() + 1) + '-' + p(dt.getDate())
+}
+
 Page({
   data: {
-    identity: '',
-    editingIdentity: false,
-    identityDraft: '',
-    avatar: '',
     total: 0,
     done: 0,
     rate: 0,
@@ -23,7 +28,8 @@ Page({
     calMonth: 0,
     monthLabel: '',
     calCells: [],
-    calAnim: ''
+    calAnim: '',
+    calendarExpanded: false
   },
 
   onShow: function () {
@@ -41,7 +47,21 @@ Page({
       const isTimer = !!(h.timerEnabled || (h.timerMin > 0))
       const isCount = !!h.countEnabled
       const durations = h.durations || {}
+      const today = store.todayStr()
       const totalDurationSec = Object.keys(durations).reduce((sum, k) => sum + (durations[k] || 0), 0)
+      const todayDurationSec = durations[today] || 0
+      const week = []
+      for (let i = 6; i >= 0; i--) {
+        const ds = dayOffset(today, -i)
+        const sec = durations[ds] || 0
+        const dp = ds.split('-')
+        week.push({
+          label: i === 0 ? '今' : (parseInt(dp[1], 10) + '/' + parseInt(dp[2], 10)),
+          sec: sec,
+          text: fmtSec(sec),
+          has: sec > 0
+        })
+      }
       const totalCount = isCount
         ? Object.keys(h.records).reduce((sum, k) => sum + (typeof h.records[k] === 'number' ? h.records[k] : 0), 0)
         : count
@@ -57,10 +77,11 @@ Page({
         isCount: isCount,
         totalDurationSec: totalDurationSec,
         totalDurationText: fmtSec(totalDurationSec),
+        todayDurationSec: todayDurationSec,
+        todayDurationText: fmtSec(todayDurationSec),
+        week: week,
         totalCount: totalCount,
-        chain: store.habitChain(h.records, 14),
-        msg: store.chainMessage(streak, count, h.name),
-        badges: store.milestones(h.records)
+        chain: store.habitChain(h.records, 14)
       }
     })
     let y = this.data.calYear
@@ -68,9 +89,6 @@ Page({
     if (!y) { const now = new Date(); y = now.getFullYear(); m = now.getMonth() }
     this.buildCalendar(y, m)
     this.setData({
-      identity: store.getIdentity(),
-      identityDraft: store.getIdentity(),
-      avatar: store.getAvatar(),
       total: total,
       done: prog.done,
       rate: rate,
@@ -114,6 +132,10 @@ Page({
     this.buildCalendar(y, m, 'slide-in-right')
   },
 
+  toggleCalendar: function () {
+    this.setData({ calendarExpanded: !this.data.calendarExpanded })
+  },
+
   onCalTouchStart: function (e) {
     this._tx = e.changedTouches[0].clientX
   },
@@ -125,46 +147,6 @@ Page({
     if (dx > 40) this.prevMonth()
     else if (dx < -40) this.nextMonth()
   },
-
-  // ===== 头像设置 =====
-  // 点头像 = 调用微信头像选择器（open-type=chooseAvatar）
-  onChooseAvatar: function (e) {
-    const url = e.detail.avatarUrl
-    if (!url) return
-    this.persistAvatar(url)
-  },
-  // 持久化：优先存为本地文件，避免临时路径失效
-  persistAvatar: function (src) {
-    const that = this
-    const isTemp = src.indexOf('http://tmp/') === 0 || src.indexOf('wxfile://tmp/') === 0
-    if (isTemp) {
-      wx.getFileSystemManager().saveFile({
-        tempFilePath: src,
-        success: function (r) { that.commitAvatar(r.savedFilePath) },
-        fail: function () { that.commitAvatar(src) }
-      })
-    } else {
-      that.commitAvatar(src)
-    }
-  },
-  commitAvatar: function (path) {
-    store.setAvatar(path)
-    this.setData({ avatar: path })
-    wx.showToast({ title: '头像已更新', icon: 'success' })
-  },
-
-  // ===== 身份宣言 =====
-  startEditIdentity: function () {
-    this.setData({ editingIdentity: true, identityDraft: this.data.identity })
-  },
-  onIdentityInput: function (e) { this.setData({ identityDraft: e.detail.value }) },
-  saveIdentity: function () {
-    store.setIdentity(this.data.identityDraft)
-    this.setData({ editingIdentity: false })
-    wx.showToast({ title: '已保存', icon: 'success' })
-    this.refresh()
-  },
-  cancelIdentity: function () { this.setData({ editingIdentity: false }) },
 
   // ===== 数据重置 =====
   onClearAll: function () {

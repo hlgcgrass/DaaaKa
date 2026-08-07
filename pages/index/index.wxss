@@ -110,6 +110,7 @@
 .del-slot { position:absolute;top:0;right:0;bottom:0;width:140rpx;background:#ff5b5b;color:#fff;font-size:28rpx;display:flex;align-items:center;justify-content:center;border-radius:0 16rpx 16rpx 0;}
 .card-slide { position:relative;background:#fff;border-radius:16rpx;padding:16rpx 18rpx;box-shadow:0 2rpx 10rpx rgba(0,0,0,0.03);transition:transform 0.25s ease;z-index:1; }
 .card-slide.open{transform:translateX(-140rpx)}
+.card-slide.dragging { background:#f0f9ff; box-shadow:0 8rpx 24rpx rgba(0,0,0,0.12); transform:scale(1.02); z-index:10; }
 
 .empty{text-align:center;padding:60rpx 0;color:#aaa}
 .empty-emoji{font-size:72rpx}

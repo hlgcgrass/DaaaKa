@@ -164,5 +164,21 @@ Page({
     wx.showToast({ title: '已保存', icon: 'success' })
     this.refresh()
   },
-  cancelIdentity: function () { this.setData({ editingIdentity: false }) }
+  cancelIdentity: function () { this.setData({ editingIdentity: false }) },
+
+  // ===== 数据重置 =====
+  onClearAll: function () {
+    const that = this
+    wx.showModal({
+      title: '清空所有数据',
+      content: '确定要删除所有习惯、打卡记录和头像吗？此操作不可恢复。',
+      confirmColor: '#FF6B6B',
+      success: function (res) {
+        if (!res.confirm) return
+        store.clearAll()
+        wx.showToast({ title: '已清空', icon: 'success' })
+        that.refresh()
+      }
+    })
+  }
 })

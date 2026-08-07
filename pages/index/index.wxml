@@ -49,9 +49,10 @@
       <view class="list">
         <view class="card" wx:for="{{habits}}" wx:key="id">
           <view class="del-slot" bindtap="removeHabit" data-id="{{item.id}}">删除</view>
-          <view class="card-slide {{swipedId === item.id ? 'open' : ''}}"
+          <view class="card-slide {{swipedId === item.id ? 'open' : ''}} {{draggingId === item.id ? 'dragging' : ''}}"
                 data-id="{{item.id}}"
-                bindtouchstart="onSwipeStart" bindtouchmove="onSwipeMove" bindtouchend="onSwipeEnd">
+                bindlongpress="onHabitLongPress"
+                bindtouchstart="onSwipeStart" bindtouchmove="onCardTouchMove" bindtouchend="onCardTouchEnd">
             <view class="card-row">
               <view class="card-main">
                 <image class="emoji" style="background:{{item.color}}1a" src="{{item.emoji}}" mode="aspectFit" />

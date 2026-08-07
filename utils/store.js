@@ -166,6 +166,20 @@ function updateHabit(id, patch) {
   if (h) { Object.assign(h, patch); save(d) }
 }
 
+// 按分类重新排序 habits：orderedIds 为该分类下习惯的新顺序 id 列表
+function reorderHabits(catId, orderedIds) {
+  const d = load()
+  if (!d.habits || !orderedIds || !orderedIds.length) return
+  const map = {}
+  d.habits.forEach(h => { map[h.id] = h })
+  let idx = 0
+  d.habits = d.habits.map(h => {
+    if (h.category === catId) return map[orderedIds[idx++]] || h
+    return h
+  })
+  save(d)
+}
+
 function toggleToday(id) {
   const d = load()
   const h = d.habits.find(x => x.id === id)
@@ -368,13 +382,21 @@ function categoryTodayProgress(catId) {
   return { done, total }
 }
 
+// 清空所有数据（重置为初始空状态）
+function clearAll() {
+  try {
+    wx.removeStorageSync(STORAGE_KEY)
+    wx.removeStorageSync(AVATAR_KEY)
+  } catch (e) {}
+}
+
 module.exports = {
   MAX_HABITS, EMOJIS, COLORS, ICON_BY_NAME,
   CATEGORIES, getCategories, getHabitsByCategory, categoryTodayProgress,
   todayStr, addDays, diffDays,
   getIdentity, setIdentity, getAvatar, setAvatar,
-  getHabits, addHabit, removeHabit, updateHabit,
-  toggleToday, isDoneToday, completeTimer,
+  getHabits, addHabit, removeHabit, updateHabit, reorderHabits,
+  toggleToday, isDoneToday, completeTimer, clearAll,
   calcStreak, calcBest, recentDays, todayProgress, monthStatus, trailingGrid,
   habitChain, chainMessage, milestones
 }

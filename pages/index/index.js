@@ -55,6 +55,7 @@ Page({
     canAdd: true,
     quotaText: '',
     swipedId: '',
+    draggingId: '',
     timerChips: [5, 10, 15, 30, 45, 60],
     showCelebrate: false,
     confetti: [],
@@ -403,6 +404,7 @@ Page({
   // ===== 左滑删除 =====
   onSwipeStart: function (e) { this._sx = e.touches[0].clientX; this._sy = e.touches[0].clientY; this._swiping = false },
   onSwipeMove: function (e) {
+    if (this.data.draggingId) return
     var dx = e.touches[0].clientX - (this._sx || 0), dy = e.touches[0].clientY - (this._sy || 0)
     if (!this._swiping && Math.abs(dx) < 8) return
     if (Math.abs(dx) > Math.abs(dy)) this._swiping = true
@@ -413,6 +415,57 @@ Page({
     }
   },
   onSwipeEnd: function () { this._swiping = false },
+
+  // 统一路由 touchmove / touchend：拖动模式下走排序，否则走左滑删除
+  onCardTouchMove: function (e) {
+    if (this.data.draggingId) this.onHabitTouchMove(e)
+    else this.onSwipeMove(e)
+  },
+  onCardTouchEnd: function (e) {
+    if (this.data.draggingId) this.onHabitTouchEnd(e)
+    else this.onSwipeEnd(e)
+  },
+
+  // ===== 长按拖动排序 =====
+  onHabitLongPress: function (e) {
+    var id = e.currentTarget.dataset.id
+    this.setData({ draggingId: id, swipedId: '' })
+    wx.vibrateShort({ type: 'light' })
+    this.queryCardRects()
+  },
+  queryCardRects: function () {
+    var that = this
+    wx.createSelectorQuery().in(this).selectAll('.card-slide').boundingClientRect(function (rects) {
+      that._cardRects = rects || []
+    }).exec()
+  },
+  onHabitTouchMove: function (e) {
+    if (!this.data.draggingId) return
+    var y = e.touches[0].clientY
+    var rects = this._cardRects
+    if (!rects || !rects.length) return
+    var targetIdx = -1
+    for (var i = 0; i < rects.length; i++) {
+      if (y >= rects[i].top && y <= rects[i].bottom) { targetIdx = i; break }
+    }
+    if (targetIdx < 0) return
+    var habits = this.data.habits
+    var draggingId = this.data.draggingId
+    var fromIdx = habits.findIndex(function (h) { return h.id === draggingId })
+    if (fromIdx < 0 || fromIdx === targetIdx) return
+    var temp = habits[fromIdx]
+    habits[fromIdx] = habits[targetIdx]
+    habits[targetIdx] = temp
+    this.setData({ habits: habits })
+    this.queryCardRects()
+  },
+  onHabitTouchEnd: function () {
+    if (!this.data.draggingId) return
+    var ids = this.data.habits.map(function (h) { return h.id })
+    store.reorderHabits(this.data.currentCat, ids)
+    this.setData({ draggingId: '' })
+    this._cardRects = null
+  },
 
   removeHabit: function (e) {
     var id = e.currentTarget.dataset.id, that = this

@@ -61,12 +61,19 @@
                 </view>
               </view>
 
-              <view class="check {{item.doneToday ? 'done' : ''}} {{item.timing ? 'timing' : ''}}"
-                    style="{{item.doneToday ? 'background:' + item.color + ';border-color:' + item.color : (item.timing ? 'border-color:' + item.color : '')}}"
-                    bindtap="onToggle" data-id="{{item.id}}">
-                <text wx:if="{{item.doneToday}}" class="ck">✓</text>
-                <text wx:elif="{{item.timing}}" class="cd">{{item.elapsedText}}</text>
-                <text wx:elif="{{item.timerEnabled}}" class="play">▶</text>
+              <view class="check-actions">
+                <view wx:if="{{item.timerEnabled}}" class="check {{item.timing ? 'timing' : ''}}"
+                      style="{{item.timing ? 'border-color:' + item.color + ';background:' + item.color : ''}}"
+                      bindtap="onPlay" data-id="{{item.id}}">
+                  <text wx:if="{{item.timing}}" class="cd">{{item.elapsedText}}</text>
+                  <text wx:else class="play">▶</text>
+                </view>
+                <view wx:if="{{item.countEnabled}}" class="check {{item.count > 0 ? 'done' : ''}}"
+                      style="{{item.count > 0 ? 'background:' + item.color + ';border-color:' + item.color : ''}}"
+                      bindtap="onCountBtn" data-id="{{item.id}}">
+                  <text wx:if="{{item.count > 0}}" class="ct">{{item.count}}</text>
+                  <text wx:else class="ct-plus">＋</text>
+                </view>
                 <view class="star-burst" wx:if="{{item.stars && item.stars.length > 0}}">
                   <view wx:for="{{item.stars}}" wx:for-item="s" wx:key="index"
                         class="star-particle s{{s.dir}}"
@@ -77,17 +84,14 @@
               </view>
             </view>
 
-            <view class="timer-row" wx:if="{{item.timerEnabled && !item.doneToday}}">
-              <view class="timer-bar" wx:if="{{item.timing && item.timerMin > 0}}"><view class="timer-bar-fill" style="width:{{item.timerPct}}%;background:{{item.color}}"></view></view>
-              <view class="timer-meta" wx:if="{{item.timing}}">
+            <view class="timer-row" wx:if="{{item.timing}}">
+              <view class="timer-bar" wx:if="{{item.timerMin > 0}}"><view class="timer-bar-fill" style="width:{{item.timerPct}}%;background:{{item.color}}"></view></view>
+              <view class="timer-meta">
                 <text class="timer-text">⏱ {{item.elapsedText}}</text>
                 <view class="timer-actions">
-                  <text class="timer-done" catchtap="onToggle" data-id="{{item.id}}">完成</text>
+                  <text class="timer-done" catchtap="onPlay" data-id="{{item.id}}">完成</text>
                   <text class="timer-cancel" catchtap="onTimerCancel" data-id="{{item.id}}">取消</text>
                 </view>
-              </view>
-              <view class="timer-meta" wx:else>
-                <text class="timer-hint">点右侧 ▶ 开始正计时</text>
               </view>
             </view>
           </view>
@@ -334,13 +338,18 @@
         </scroll-view>
       </view>
 
-      <view class="field-label">计时方式（可选）</view>
+      <view class="field-label">打卡方式（可选）</view>
       <view class="timer-setting">
         <view class="switch-line">
-          <text class="ts-label">需要计时</text>
+          <text class="ts-label">计时</text>
           <switch checked="{{form.timerEnabled}}" bindchange="onTimerToggle" color="#07c160" />
         </view>
-        <view class="timer-tip" wx:if="{{form.timerEnabled}}">开启后，主页该项右侧显示 ▶，点一下开始正计时，再点「完成」即记录本次时长</view>
+        <view class="switch-line" style="margin-top:18rpx;">
+          <text class="ts-label">计次</text>
+          <switch checked="{{form.countEnabled}}" bindchange="onCountToggle" color="#07c160" />
+        </view>
+        <view class="timer-tip" wx:if="{{form.timerEnabled && !form.countEnabled}}">开启后，主页右侧显示 ▶，点一下开始正计时，再点「完成」记录本次时长</view>
+        <view class="timer-tip" wx:if="{{form.countEnabled && !form.timerEnabled}}">开启后，主页可多次打卡并显示累计次数</view>
       </view>
 
       <view class="sheet-actions">

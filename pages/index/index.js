@@ -197,10 +197,13 @@ Page({
         elapsedText = fmtSec(elapsedSec)
         if (targetSec > 0) timerPct = Math.min(100, Math.round(elapsedSec / targetSec * 100))
       }
+      var count = typeof h.records[t] === 'number' ? h.records[t] : 0
       return {
         id: h.id, name: h.name, emoji: h.emoji, color: h.color,
         cue: h.cue, time: h.time,
         doneToday: !!h.records[t],
+        countEnabled: !!h.countEnabled,
+        count: count,
         timerEnabled: enabled,
         timerMin: tm, timerStart: h.timerStart || 0, timerDate: h.timerDate || '',
         timing: timing, elapsedSec: elapsedSec, elapsedText: elapsedText, timerPct: timerPct
@@ -258,46 +261,51 @@ Page({
   },
 
   // ===== 打卡/计时操作 =====
-  onToggle: function (e) {
+  // ▶ 按钮：计时（开始 / 完成 / 取消）。同时开启计次时，完成计时会自动 +1 次数
+  onPlay: function (e) {
     var id = e.currentTarget.dataset.id
     var idx = this.data.habits.findIndex(function (h) { return h.id === id })
     if (idx < 0) return
     var h = this.data.habits[idx]
     var t = store.todayStr()
 
-    // 计时类习惯：点一下开始正计时，再点完成并记录时长
-    if (h.timerEnabled || h.timerMin > 0) {
-      if (h.doneToday) {
-        store.toggleToday(id)
-        this.refreshHabits(this.data.currentCat)
-        return
-      }
-      if (h.timing) {
-        // 完成：记录本次时长
-        var sec = h.timerStart ? Math.floor((Date.now() - h.timerStart) / 1000) : (h.elapsedSec || 0)
-        store.completeTimer(id, sec)
-        this.refreshHabits(this.data.currentCat)
-        wx.showToast({ title: '打卡成功 · 本次 ' + fmtSec(sec), icon: 'success' })
-        this.triggerStars(id)
-        return
-      }
-      // 开始计时
-      var start = Date.now()
-      store.updateHabit(id, { timerStart: start, timerDate: t })
-      this.setData({
-        ['habits[' + idx + '].timerStart']: start, ['habits[' + idx + '].timerDate']: t,
-        ['habits[' + idx + '].timing']: true, ['habits[' + idx + '].elapsedSec']: 0,
-        ['habits[' + idx + '].elapsedText']: '00:00', ['habits[' + idx + '].timerPct']: 0
-      })
-      this.ensureTimer()
-      wx.showToast({ title: '开始计时', icon: 'none' })
+    // 计时中 -> 完成（计次习惯由 completeTimer 内部 +1）
+    if (h.timing) {
+      var sec = h.timerStart ? Math.floor((Date.now() - h.timerStart) / 1000) : (h.elapsedSec || 0)
+      store.completeTimer(id, sec)
+      this.refreshHabits(this.data.currentCat)
+      wx.showToast({ title: '打卡成功 · 本次 ' + fmtSec(sec), icon: 'success' })
+      this.triggerStars(id)
       return
     }
+    // 已完成的纯计时习惯（未开计次）-> 再次点击取消完成
+    if (h.doneToday && !h.countEnabled) {
+      store.toggleToday(id)
+      this.refreshHabits(this.data.currentCat)
+      return
+    }
+    // 开始计时
+    var start = Date.now()
+    store.updateHabit(id, { timerStart: start, timerDate: t })
+    this.setData({
+      ['habits[' + idx + '].timerStart']: start, ['habits[' + idx + '].timerDate']: t,
+      ['habits[' + idx + '].timing']: true, ['habits[' + idx + '].elapsedSec']: 0,
+      ['habits[' + idx + '].elapsedText']: '00:00', ['habits[' + idx + '].timerPct']: 0
+    })
+    this.ensureTimer()
+    wx.showToast({ title: '开始计时', icon: 'none' })
+  },
 
-    var wasDone = !!h.doneToday
+  // 次数按钮：计次 +1（独立，不触发计时）
+  onCountBtn: function (e) {
+    var id = e.currentTarget.dataset.id
+    var idx = this.data.habits.findIndex(function (h) { return h.id === id })
+    if (idx < 0) return
+    var h = this.data.habits[idx]
     store.toggleToday(id)
     this.refreshHabits(this.data.currentCat)
-    if (!wasDone) this.triggerStars(id)
+    wx.showToast({ title: '打卡 +' + (h.count + 1) + ' 次', icon: 'none' })
+    this.triggerStars(id)
   },
 
   // 计时中点“取消”：停止但不记录
@@ -339,7 +347,7 @@ Page({
       form: {
         name: '', emoji: store.EMOJIS[0], color: store.COLORS[0],
         cue: '', time: '', category: this.data.currentCat,
-        timerEnabled: false, timerMin: 0
+        timerEnabled: false, timerMin: 0, countEnabled: false
       },
       nameError: ''
     })
@@ -359,6 +367,7 @@ Page({
   selectEmoji: function (e) { this.setData({ 'form.emoji': e.currentTarget.dataset.v }) },
   selectColor: function (e) { this.setData({ 'form.color': e.currentTarget.dataset.v }) },
   onTimerToggle: function (e) { this.setData({ 'form.timerEnabled': e.detail.value }) },
+  onCountToggle: function (e) { this.setData({ 'form.countEnabled': e.detail.value }) },
   onTimerMinInput: function (e) {
     var v = parseInt(e.detail.value, 10)
     if (isNaN(v)) v = 0; if (v < 1) v = 1; if (v > 600) v = 600
@@ -373,7 +382,8 @@ Page({
     var res = store.addHabit({
       name: name, emoji: f.emoji, color: f.color, cue: f.cue, time: f.time,
       category: f.category,
-      timerEnabled: !!f.timerEnabled, timerMin: 0
+      timerEnabled: !!f.timerEnabled, timerMin: 0,
+      countEnabled: !!f.countEnabled
     })
     if (!res.ok && res.reason === 'limit') { wx.showToast({ title: '最多 ' + store.MAX_HABITS + ' 个习惯', icon: 'none' }); return }
     wx.showToast({ title: '已添加', icon: 'success' })

@@ -85,6 +85,10 @@
   margin-left: 12rpx; flex-shrink: 0; position: relative; overflow: visible;
 }
 .check.done {}
+.check .ct { font-size: 22rpx; font-weight: 700; }
+.check .ct-plus { font-size: 30rpx; font-weight: 700; color: #9aa0a6; }
+.check-actions { display: flex; align-items: center; margin-left: 12rpx; flex-shrink: 0; position: relative; }
+.check-actions .check + .check { margin-left: 12rpx; }
 
 /* 星星特效 */
 .star-burst { position: absolute; top: 50%; left: 50%; width: 0; height: 0; pointer-events: none; z-index: 10; }

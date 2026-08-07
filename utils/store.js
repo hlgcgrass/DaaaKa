@@ -145,6 +145,7 @@ function addHabit(opts) {
     timerStart: 0, // 计时开始的时间戳（ms），0 = 未在计时
     timerDate: '', // 计时开始的日期（todayStr），用于跨天失效判断
     durations: {}, // 各日期完成计时时长（秒）：date -> sec
+    countEnabled: !!opts.countEnabled, // 是否启用计次（一天可多次打卡）
     records: {}
   }
   if (!habit.name) return { ok: false, reason: 'empty' }
@@ -170,8 +171,14 @@ function toggleToday(id) {
   const h = d.habits.find(x => x.id === id)
   if (!h) return
   const t = todayStr()
-  if (h.records[t]) { delete h.records[t]; if (h.durations) delete h.durations[t] }
-  else h.records[t] = true
+  if (h.countEnabled) {
+    // 计次模式：每次点击 +1，不减少
+    h.records[t] = (typeof h.records[t] === 'number' ? h.records[t] : 0) + 1
+  } else {
+    // 普通模式：切换布尔完成状态
+    if (h.records[t]) { delete h.records[t]; if (h.durations) delete h.durations[t] }
+    else h.records[t] = true
+  }
   save(d)
 }
 
@@ -186,7 +193,11 @@ function completeTimer(id, durationSec) {
   const h = d.habits.find(x => x.id === id)
   if (!h) return
   const t = todayStr()
-  if (!h.records[t]) h.records[t] = true
+  if (h.countEnabled) {
+    h.records[t] = (typeof h.records[t] === 'number' ? h.records[t] : 0) + 1
+  } else {
+    if (!h.records[t]) h.records[t] = true
+  }
   if (typeof durationSec === 'number' && durationSec > 0) {
     if (!h.durations) h.durations = {}
     h.durations[t] = Math.round(durationSec)

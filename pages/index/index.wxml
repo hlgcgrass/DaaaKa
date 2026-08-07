@@ -63,10 +63,11 @@
               </view>
 
               <view class="check-actions">
-                <view wx:if="{{item.timerEnabled}}" class="check {{item.timing ? 'timing' : ''}}"
-                      style="{{item.timing ? 'border-color:' + item.color + ';background:' + item.color : ''}}"
+                <view wx:if="{{item.timerEnabled}}" class="check {{item.timing ? 'timing' : (item.doneToday && !item.countEnabled ? 'done' : '')}}"
+                      style="{{item.timing || (item.doneToday && !item.countEnabled) ? 'border-color:' + item.color + ';background:' + item.color : ''}}"
                       bindtap="onPlay" data-id="{{item.id}}">
                   <text wx:if="{{item.timing}}" class="cd">{{item.elapsedText}}</text>
+                  <text wx:elif="{{item.doneToday && !item.countEnabled}}" class="ck">✓</text>
                   <text wx:else class="play">▶</text>
                 </view>
                 <view wx:if="{{item.countEnabled}}" class="check {{item.count > 0 ? 'done' : ''}}"

@@ -214,7 +214,7 @@ function completeTimer(id, durationSec) {
   }
   if (typeof durationSec === 'number' && durationSec > 0) {
     if (!h.durations) h.durations = {}
-    h.durations[t] = Math.round(durationSec)
+    h.durations[t] = (h.durations[t] || 0) + Math.round(durationSec)
   }
   h.timerStart = 0
   h.timerDate = ''

@@ -161,7 +161,7 @@
 
 /* 计时打卡 */
 .check .ck{color:#fff;font-size:28rpx;font-weight:700;line-height:1}
-.check .play{color:#c2c2c2;font-size:24rpx;line-height:1}
+.check .play{color:#07c160;font-size:26rpx;line-height:1;font-weight:700}
 .check .cd{color:#555;font-size:18rpx;font-weight:700;letter-spacing:-1px;line-height:1}
 .check.timing{animation:timingPulse 1.4s ease-in-out infinite}
 @keyframes timingPulse{

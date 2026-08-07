@@ -187,22 +187,23 @@ Page({
     var t = store.todayStr()
     var list = habits.map(function (h) {
       var tm = h.timerMin || 0
-      var running = tm > 0 && h.timerStart && h.timerDate === t && !h.records[t]
-      var timing = false, remainingSec = 0, remainingText = '', timerPct = 0
+      var enabled = !!(h.timerEnabled || tm > 0)
+      var targetSec = tm * 60
+      var running = enabled && h.timerStart && h.timerDate === t && !h.records[t]
+      var timing = false, elapsedSec = 0, elapsedText = '', timerPct = 0
       if (running) {
-        var elapsed = Date.now() - h.timerStart
-        var totalMs = tm * 60000
-        var rem = totalMs - elapsed
+        elapsedSec = Math.floor((Date.now() - h.timerStart) / 1000)
         timing = true
-        if (rem <= 0) { remainingSec = 0; remainingText = '00:00'; timerPct = 100 }
-        else { remainingSec = Math.ceil(rem / 1000); remainingText = fmtSec(remainingSec); timerPct = Math.min(100, Math.round(elapsed / totalMs * 100)) }
+        elapsedText = fmtSec(elapsedSec)
+        if (targetSec > 0) timerPct = Math.min(100, Math.round(elapsedSec / targetSec * 100))
       }
       return {
         id: h.id, name: h.name, emoji: h.emoji, color: h.color,
         cue: h.cue, time: h.time,
         doneToday: !!h.records[t],
+        timerEnabled: enabled,
         timerMin: tm, timerStart: h.timerStart || 0, timerDate: h.timerDate || '',
-        timing: timing, remainingSec: remainingSec, remainingText: remainingText, timerPct: timerPct
+        timing: timing, elapsedSec: elapsedSec, elapsedText: elapsedText, timerPct: timerPct
       }
     })
 
@@ -239,33 +240,21 @@ Page({
   tick: function () {
     if (this.data.currentView !== 'habits') return
     var now = Date.now(), t = store.todayStr()
-    var list = this.data.habits, updates = {}, needRefresh = false
+    var list = this.data.habits, updates = {}
     for (var i = 0; i < list.length; i++) {
       var h = list[i]
-      if (h.timerMin > 0 && h.timerStart && h.timerDate === t && !h.doneToday) {
-        var elapsed = now - h.timerStart, totalMs = h.timerMin * 60000, rem = totalMs - elapsed
-        if (rem <= 0) {
-          store.completeTimer(h.id)
-          updates['habits[' + i + '].doneToday'] = true
-          updates['habits[' + i + '].timing'] = false
-          updates['habits[' + i + '].timerStart'] = 0
-          updates['habits[' + i + '].timerDate'] = ''
-          updates['habits[' + i + '].remainingText'] = '00:00'
-          updates['habits[' + i + '].timerPct'] = 100
-          needRefresh = true
-        } else {
-          var sec = Math.ceil(rem / 1000)
-          updates['habits[' + i + '].remainingSec'] = sec
-          updates['habits[' + i + '].remainingText'] = fmtSec(sec)
-          updates['habits[' + i + '].timerPct'] = Math.min(100, Math.round(elapsed / totalMs * 100))
+      if (h.timerEnabled || h.timerMin > 0) {
+        if (h.timerStart && h.timerDate === t && !h.doneToday) {
+          var elapsed = Math.floor((now - h.timerStart) / 1000)
+          var tSec = (h.timerMin || 0) * 60
+          updates['habits[' + i + '].elapsedSec'] = elapsed
+          updates['habits[' + i + '].elapsedText'] = fmtSec(elapsed)
+          updates['habits[' + i + '].timing'] = true
+          if (tSec > 0) updates['habits[' + i + '].timerPct'] = Math.min(100, Math.round(elapsed / tSec * 100))
         }
       }
     }
     if (Object.keys(updates).length) this.setData(updates)
-    if (needRefresh) {
-      this.refreshHabits(this.data.currentCat)
-      wx.showToast({ title: '⏰ 计时结束，打卡成功', icon: 'success' })
-    }
   },
 
   // ===== 打卡/计时操作 =====
@@ -274,29 +263,31 @@ Page({
     var idx = this.data.habits.findIndex(function (h) { return h.id === id })
     if (idx < 0) return
     var h = this.data.habits[idx]
+    var t = store.todayStr()
 
-    if (h.timerMin > 0) {
-      var t = store.todayStr()
+    // 计时类习惯：点一下开始正计时，再点完成并记录时长
+    if (h.timerEnabled || h.timerMin > 0) {
       if (h.doneToday) {
         store.toggleToday(id)
-        store.updateHabit(id, { timerStart: 0, timerDate: '' })
         this.refreshHabits(this.data.currentCat)
         return
       }
       if (h.timing) {
-        store.updateHabit(id, { timerStart: 0, timerDate: '' })
-        this.setData({ ['habits[' + idx + '].timerStart']: 0, ['habits[' + idx + '].timerDate']: '', ['habits[' + idx + '].timing']: false })
-        wx.showToast({ title: '已取消计时', icon: 'none' })
+        // 完成：记录本次时长
+        var sec = h.timerStart ? Math.floor((Date.now() - h.timerStart) / 1000) : (h.elapsedSec || 0)
+        store.completeTimer(id, sec)
+        this.refreshHabits(this.data.currentCat)
+        wx.showToast({ title: '打卡成功 · 本次 ' + fmtSec(sec), icon: 'success' })
+        this.triggerStars(id)
         return
       }
+      // 开始计时
       var start = Date.now()
       store.updateHabit(id, { timerStart: start, timerDate: t })
       this.setData({
         ['habits[' + idx + '].timerStart']: start, ['habits[' + idx + '].timerDate']: t,
-        ['habits[' + idx + '].timing']: true,
-        ['habits[' + idx + '].remainingSec']: h.timerMin * 60,
-        ['habits[' + idx + '].remainingText']: fmtSec(h.timerMin * 60),
-        ['habits[' + idx + '].timerPct']: 0
+        ['habits[' + idx + '].timing']: true, ['habits[' + idx + '].elapsedSec']: 0,
+        ['habits[' + idx + '].elapsedText']: '00:00', ['habits[' + idx + '].timerPct']: 0
       })
       this.ensureTimer()
       wx.showToast({ title: '开始计时', icon: 'none' })
@@ -307,6 +298,14 @@ Page({
     store.toggleToday(id)
     this.refreshHabits(this.data.currentCat)
     if (!wasDone) this.triggerStars(id)
+  },
+
+  // 计时中点“取消”：停止但不记录
+  onTimerCancel: function (e) {
+    var id = e.currentTarget.dataset.id
+    store.updateHabit(id, { timerStart: 0, timerDate: '' })
+    this.refreshHabits(this.data.currentCat)
+    wx.showToast({ title: '已取消计时', icon: 'none' })
   },
 
   onCompleteNow: function (e) {
@@ -340,7 +339,7 @@ Page({
       form: {
         name: '', emoji: store.EMOJIS[0], color: store.COLORS[0],
         cue: '', time: '', category: this.data.currentCat,
-        timerEnabled: false, timerMin: 30
+        timerEnabled: false, timerMin: 0
       },
       nameError: ''
     })
@@ -374,7 +373,7 @@ Page({
     var res = store.addHabit({
       name: name, emoji: f.emoji, color: f.color, cue: f.cue, time: f.time,
       category: f.category,
-      timerMin: f.timerEnabled ? (parseInt(f.timerMin, 10) || 0) : 0
+      timerEnabled: !!f.timerEnabled, timerMin: 0
     })
     if (!res.ok && res.reason === 'limit') { wx.showToast({ title: '最多 ' + store.MAX_HABITS + ' 个习惯', icon: 'none' }); return }
     wx.showToast({ title: '已添加', icon: 'success' })

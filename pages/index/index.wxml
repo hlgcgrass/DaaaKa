@@ -65,8 +65,8 @@
                     style="{{item.doneToday ? 'background:' + item.color + ';border-color:' + item.color : (item.timing ? 'border-color:' + item.color : '')}}"
                     bindtap="onToggle" data-id="{{item.id}}">
                 <text wx:if="{{item.doneToday}}" class="ck">✓</text>
-                <text wx:elif="{{item.timing}}" class="cd">{{item.remainingText}}</text>
-                <text wx:elif="{{item.timerMin > 0}}" class="play">▶</text>
+                <text wx:elif="{{item.timing}}" class="cd">{{item.elapsedText}}</text>
+                <text wx:elif="{{item.timerEnabled}}" class="play">▶</text>
                 <view class="star-burst" wx:if="{{item.stars && item.stars.length > 0}}">
                   <view wx:for="{{item.stars}}" wx:for-item="s" wx:key="index"
                         class="star-particle s{{s.dir}}"
@@ -77,13 +77,17 @@
               </view>
             </view>
 
-            <view class="timer-row" wx:if="{{item.timerMin > 0 && !item.doneToday}}">
-              <view class="timer-bar" wx:if="{{item.timing}}"><view class="timer-bar-fill" style="width:{{item.timerPct}}%;background:{{item.color}}"></view></view>
+            <view class="timer-row" wx:if="{{item.timerEnabled && !item.doneToday}}">
+              <view class="timer-bar" wx:if="{{item.timing && item.timerMin > 0}}"><view class="timer-bar-fill" style="width:{{item.timerPct}}%;background:{{item.color}}"></view></view>
               <view class="timer-meta" wx:if="{{item.timing}}">
-                <text class="timer-text">⏱ 计时中 {{item.remainingText}}</text>
+                <text class="timer-text">⏱ {{item.elapsedText}}</text>
                 <view class="timer-actions">
-                  <text class="timer-cancel" catchtap="onToggle" data-id="{{item.id}}">取消</text>
+                  <text class="timer-done" catchtap="onToggle" data-id="{{item.id}}">完成</text>
+                  <text class="timer-cancel" catchtap="onTimerCancel" data-id="{{item.id}}">取消</text>
                 </view>
+              </view>
+              <view class="timer-meta" wx:else>
+                <text class="timer-hint">点右侧 ▶ 开始正计时</text>
               </view>
             </view>
           </view>
@@ -330,24 +334,13 @@
         </scroll-view>
       </view>
 
-      <view class="field-label">计时打卡（可选）</view>
+      <view class="field-label">计时方式（可选）</view>
       <view class="timer-setting">
         <view class="switch-line">
-          <text class="ts-label">需要计时完成</text>
+          <text class="ts-label">需要计时</text>
           <switch checked="{{form.timerEnabled}}" bindchange="onTimerToggle" color="#07c160" />
         </view>
-        <view class="min-row" wx:if="{{form.timerEnabled}}">
-          <text class="min-label">时长</text>
-          <input class="min-input" type="number" value="{{form.timerMin}}" bindinput="onTimerMinInput" />
-          <text class="min-unit">分钟</text>
-          <view class="chips">
-            <view wx:for="{{timerChips}}" wx:key="*this"
-                  class="chip {{form.timerMin === item ? 'sel' : ''}}"
-                  style="{{form.timerMin === item ? 'background:' + form.color + ';border-color:' + form.color : ''}}"
-                  bindtap="setTimerMin" data-v="{{item}}">{{item}}</view>
-          </view>
-        </view>
-        <view class="timer-tip" wx:if="{{form.timerEnabled}}">开启后，点一下开始倒计时，时间到自动打卡成功（可中途取消）</view>
+        <view class="timer-tip" wx:if="{{form.timerEnabled}}">开启后，主页该项右侧显示 ▶，点一下开始正计时，再点「完成」即记录本次时长</view>
       </view>
 
       <view class="sheet-actions">

@@ -286,7 +286,107 @@
       </view>
     </block>
 
+    <!-- ========== 视图F：计时器 ========== -->
+    <block wx:elif="{{currentView === 'timer'}}">
+      <view class="panel-header">
+        <text class="ph-title">⏱ 计时器</text>
+        <text class="ph-sub">按顺序执行组合任务，全程语音播报</text>
+      </view>
+
+      <!-- 汇总 -->
+      <view class="tm-hero">
+        <view class="tm-hero-cell">
+          <text class="tm-hero-num">{{timerTotal}}</text>
+          <text class="tm-hero-unit">个任务</text>
+        </view>
+        <view class="tm-hero-div"></view>
+        <view class="tm-hero-cell">
+          <text class="tm-hero-dur">{{timerTotalText}}</text>
+          <text class="tm-hero-unit">总时长</text>
+        </view>
+      </view>
+
+      <!-- 音色设置 -->
+      <view class="tm-sec">
+        <text class="tm-sec-title">语音播报音色</text>
+        <view class="tm-voices">
+          <view wx:for="{{voices}}" wx:key="id"
+                class="tm-voice {{voiceId === item.id ? 'sel' : ''}}"
+                data-id="{{item.id}}" bindtap="selectVoice">
+            <text class="tm-voice-name">{{item.name}}</text>
+            <text class="tm-voice-desc">{{item.desc}}</text>
+          </view>
+        </view>
+        <view class="tm-tick-row">
+          <text class="tm-tick-label">秒针走动声</text>
+          <switch checked="{{tickOn}}" bindchange="toggleTick" color="#07c160" />
+        </view>
+      </view>
+
+      <!-- 任务清单 -->
+      <view class="tm-sec-head">
+        <text class="tm-sec-title">组合任务（按序执行）</text>
+        <text class="tm-clear" wx:if="{{timerTotal}}" bindtap="clearTimerTasks">清空</text>
+      </view>
+
+      <view class="tm-list" wx:if="{{timerTotal}}">
+        <view class="tm-item" wx:for="{{timerTasks}}" wx:key="id">
+          <view class="tm-order">
+            <text class="tm-move {{index === 0 ? 'off' : ''}}" wx:if="{{index > 0}}"
+                  data-id="{{item.id}}" data-dir="-1" bindtap="moveTimerTask">▲</text>
+            <text class="tm-move" wx:if="{{index < timerTotal - 1}}"
+                  data-id="{{item.id}}" data-dir="1" bindtap="moveTimerTask">▼</text>
+          </view>
+          <text class="tm-idx">{{index + 1}}</text>
+          <view class="tm-body">
+            <text class="tm-name">{{item.name}}</text>
+            <text class="tm-dur">{{item.timeLabel}}</text>
+          </view>
+          <text class="tm-del" data-id="{{item.id}}" bindtap="removeTimerTask">✕</text>
+        </view>
+      </view>
+
+      <view class="tm-empty" wx:else>
+        <text class="tm-empty-emoji">⏱</text>
+        <text class="tm-empty-text">还没有任务，点下方按钮添加</text>
+      </view>
+
+      <view class="tm-pad"></view>
+
+      <view class="tm-actions">
+        <button class="tm-add-btn" bindtap="openTimerAdd">＋ 添加任务</button>
+        <button class="tm-start-btn" bindtap="startTimer">▶ 启动计时</button>
+      </view>
+    </block>
+
   </view><!-- /main-area -->
+
+  <!-- ===== 添加组合任务弹窗 ===== -->
+  <view class="mask" wx:if="{{showTimerAdd}}" bindtap="closeTimerAdd">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-title">添加任务</view>
+
+      <view class="field">
+        <input class="f-input" type="text" placeholder="任务名称，如：深蹲 30 个"
+               value="{{timerForm.name}}" bindinput="onTimerNameInput" maxlength="30" />
+      </view>
+
+      <view class="field-label">时长</view>
+      <picker mode="multiSelector" range="{{timerPickerRange}}"
+              value="{{timerRange}}" bindchange="onTimerPickerChange">
+        <view class="tm-picker">
+          <text class="tm-picker-val">{{timerForm.value}}</text>
+          <text class="tm-picker-unit">{{timerForm.unit === 'second' ? '秒' : '分钟'}}</text>
+          <text class="tm-picker-arrow">▾</text>
+        </view>
+      </picker>
+
+      <view class="sheet-actions">
+        <button class="btn ghost" bindtap="closeTimerAdd">取消</button>
+        <button class="btn primary" bindtap="submitTimerTask">添加</button>
+      </view>
+    </view>
+  </view>
 
   <!-- ===== 添加习惯弹窗 ===== -->
   <view class="mask" wx:if="{{showAdd}}" bindtap="closeAdd">

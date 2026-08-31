@@ -2,6 +2,11 @@ var store = require('../../utils/store.js')
 var accStore = require('../../utils/accountStore.js')
 var noteStore = require('../../utils/noteStore.js')
 var todoStore = require('../../utils/todoStore.js')
+var timerStore = require('../../utils/timerStore.js')
+
+// 微信同声传译插件（需在小程序管理后台「设置-第三方设置-插件管理」中添加）
+var siPlugin = null
+try { siPlugin = requirePlugin('WechatSI') } catch (e) { siPlugin = null }
 
 var WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
@@ -90,13 +95,33 @@ Page({
     eduSource: '',
     eduLoading: false,
     eduDetailShow: false,
-    eduDetailItem: null
+    eduDetailItem: null,
+
+    // ===== 计时器视图 =====
+    timerTasks: [],
+    timerTotal: 0,
+    timerTotalText: '',
+    showTimerAdd: false,
+    timerForm: { name: '', value: 5, unit: 'minute' },
+    timerNumbers: (function () {
+      var a = []
+      for (var i = 1; i <= 120; i++) a.push(i)
+      return a
+    })(),
+    timerUnits: ['分钟', '秒'],
+    timerPickerRange: [],   // [timerNumbers, timerUnits]，onLoad 中组装
+    timerRange: [4, 0],
+    voices: timerStore.VOICES,
+    voiceId: 'standard',
+    tickOn: true
   },
 
   onLoad: function () {
     this._allDone = false
     this._celebTimer = null
     this._timerInt = null
+    // 组合任务时长选择器：两列 [数值 1-120, 单位 分钟/秒]
+    this.setData({ timerPickerRange: [this.data.timerNumbers, this.data.timerUnits] })
   },
 
   onShow: function () {
@@ -138,6 +163,8 @@ Page({
     list.push({ id: 'todo', name: '待办', icon: '📋', color: '#722ed1', type: 'todo', count: 0 })
     // 教育时政：在"待办"之后，内联视图，由云函数每日 08:00 更新真实政策新闻
     list.push({ id: 'education', name: '教育时政', icon: '📰', color: '#d4380d', type: 'education', count: 0 })
+    // 计时器：在"教育时政"之后，内联视图，编排组合任务后跳转全屏倒计时页
+    list.push({ id: 'timer', name: '计时器', icon: '⏱', color: '#fa8c16', type: 'timer', count: 0 })
     var groupCats = list.filter(function (c) { return c.type === 'group' })
     this.setData({ categories: list, groupCategories: groupCats, todayLabel: todayLabel() })
   },
@@ -158,6 +185,7 @@ Page({
     if (cat.type === 'tool') view = (catId === 'account' ? 'account' : 'notes')
     else if (cat.type === 'todo') view = 'todo'
     else if (cat.type === 'education') view = 'education'
+    else if (cat.type === 'timer') view = 'timer'
 
     this.setData({
       currentCat: cat.id,
@@ -177,6 +205,8 @@ Page({
       this.refreshTodo()
     } else if (view === 'education') {
       this.refreshEducation()
+    } else if (view === 'timer') {
+      this.refreshTimer()
     }
   },
 
@@ -657,5 +687,121 @@ Page({
 
   closeEduDetail: function () {
     this.setData({ eduDetailShow: false, eduDetailItem: null })
+  },
+
+  // ==================== 计时器逻辑 ====================
+  refreshTimer: function () {
+    var state = timerStore.getState()
+    var tasks = (state.tasks || []).map(function (t) {
+      return {
+        id: t.id, name: t.name, value: t.value, unit: t.unit,
+        timeLabel: timerStore.taskLabel(t)
+      }
+    })
+    this.setData({
+      timerTasks: tasks,
+      timerTotal: tasks.length,
+      timerTotalText: this._fmtDur(timerStore.totalSeconds(state.tasks)),
+      voiceId: state.voice || 'standard',
+      tickOn: state.tick !== false
+    })
+  },
+
+  _fmtDur: function (sec) {
+    sec = Math.max(0, sec | 0)
+    var m = Math.floor(sec / 60), s = sec % 60
+    if (m <= 0) return s + ' 秒'
+    return s > 0 ? (m + ' 分 ' + s + ' 秒') : (m + ' 分钟')
+  },
+
+  openTimerAdd: function () {
+    this.setData({
+      showTimerAdd: true,
+      timerForm: { name: '', value: 5, unit: 'minute' },
+      timerRange: [4, 0]
+    })
+  },
+
+  closeTimerAdd: function () { this.setData({ showTimerAdd: false }) },
+
+  onTimerNameInput: function (e) { this.setData({ 'timerForm.name': e.detail.value }) },
+
+  onTimerPickerChange: function (e) {
+    var v = e.detail.value || [0, 0]
+    var num = this.data.timerNumbers[v[0]] || 1
+    var unit = v[1] === 1 ? 'second' : 'minute'
+    this.setData({ 'timerForm.value': num, 'timerForm.unit': unit, timerRange: v })
+  },
+
+  submitTimerTask: function () {
+    var name = (this.data.timerForm.name || '').trim()
+    if (!name) { wx.showToast({ title: '请填写任务名称', icon: 'none' }); return }
+    timerStore.addTask({ name: name, value: this.data.timerForm.value, unit: this.data.timerForm.unit })
+    this.setData({ showTimerAdd: false })
+    this.refreshTimer()
+  },
+
+  removeTimerTask: function (e) {
+    var id = e.currentTarget.dataset.id, that = this
+    wx.showModal({
+      title: '删除任务', content: '确定删除这个任务吗？',
+      success: function (r) { if (r.confirm) { timerStore.removeTask(id); that.refreshTimer() } }
+    })
+  },
+
+  moveTimerTask: function (e) {
+    timerStore.moveTask(e.currentTarget.dataset.id, Number(e.currentTarget.dataset.dir))
+    this.refreshTimer()
+  },
+
+  clearTimerTasks: function () {
+    var that = this
+    if (!this.data.timerTotal) { wx.showToast({ title: '还没有任务', icon: 'none' }); return }
+    wx.showModal({
+      title: '清空任务', content: '确定清空全部任务吗？',
+      success: function (r) { if (r.confirm) { timerStore.clearTasks(); that.refreshTimer() } }
+    })
+  },
+
+  selectVoice: function (e) {
+    var id = e.currentTarget.dataset.id
+    timerStore.setVoice(id)
+    this.setData({ voiceId: id })
+    this.speakDemo('语音播报已就绪', id)
+  },
+
+  toggleTick: function () {
+    var on = !this.data.tickOn
+    timerStore.setTick(on)
+    this.setData({ tickOn: on })
+  },
+
+  /** 试听当前音色（voiceId 显式传入，避免 setData 异步导致取到旧值） */
+  speakDemo: function (text, voiceId) {
+    if (!siPlugin) { wx.showToast({ title: '需先在后台添加同声传译插件', icon: 'none' }); return }
+    var voice = timerStore.getVoice(voiceId || this.data.voiceId)
+    siPlugin.textToSpeech({
+      lang: 'zh_CN',
+      tts: true,
+      content: text,
+      speed: voice.speed,
+      success: function (res) {
+        if (!res || !res.filename) return
+        var a = null
+        try { a = wx.createInnerAudioContext() } catch (err) { return }
+        var finished = false
+        var fin = function () { if (!finished) { finished = true; try { a.destroy() } catch (err) {} } }
+        a.onEnded(fin)
+        a.onError(fin)
+        a.src = res.filename
+        try { a.playbackRate = voice.rate } catch (err) {}
+        a.play()
+      }
+    })
+  },
+
+  startTimer: function () {
+    if (!this.data.timerTotal) { wx.showToast({ title: '先添加至少一个任务', icon: 'none' }); return }
+    wx.navigateTo({ url: '/pages/countdown/countdown' })
   }
 })

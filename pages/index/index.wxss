@@ -289,9 +289,60 @@
 .edu-arrow{color:#ccc;font-size:36rpx;margin-left:10rpx;flex-shrink:0}
 
 /* 教育时政 - 详情弹窗 */
-.edu-detail-sheet{max-height:80vh}
-.edu-detail-header{margin-bottom:24rpx;border-bottom:1rpx solid #eee;padding-bottom:20rpx}
-.edu-detail-title{font-size:32rpx;color:#111;font-weight:700;line-height:1.5;display:block;margin-bottom:12rpx}
-.edu-detail-src{font-size:23rpx;color:#999}
-.edu-detail-body{max-height:50vh;padding:0 4rpx}
-.edu-detail-content{font-size:28rpx;color:#333;line-height:1.9;white-space:pre-wrap;word-break:break-all}
+.edu-detail-sheet{max-height:82vh;padding:52rpx 52rpx calc(32rpx+env(safe-area-inset-bottom))}
+.edu-detail-header{margin-bottom:28rpx;border-bottom:1rpx solid #eee;padding-bottom:24rpx}
+.edu-detail-title{font-size:34rpx;color:#111;font-weight:700;line-height:1.55;display:block;margin-bottom:16rpx;padding-right:20rpx}
+.edu-detail-src{font-size:24rpx;color:#999}
+.edu-detail-body{max-height:54vh;padding:8rpx 8rpx 0;margin-top:12rpx}
+.edu-detail-content{font-size:29rpx;color:#333;line-height:2.0;white-space:pre-wrap;word-break:break-all;letter-spacing:0.5rpx}
+
+/* ===== 计时器视图 ===== */
+.tm-hero{display:flex;align-items:center;background:linear-gradient(135deg,#07c160,#0a9d51);border-radius:24rpx;padding:34rpx 40rpx;margin-bottom:26rpx;box-shadow:0 8rpx 24rpx rgba(7,193,96,0.20)}
+.tm-hero-cell{flex:1;display:flex;flex-direction:column;align-items:center}
+.tm-hero-num{font-size:62rpx;font-weight:700;color:#fff;line-height:1.1}
+.tm-hero-dur{font-size:38rpx;font-weight:700;color:#fff;line-height:1.2}
+.tm-hero-unit{font-size:23rpx;color:rgba(255,255,255,0.82);margin-top:10rpx}
+.tm-hero-div{width:2rpx;height:66rpx;background:rgba(255,255,255,0.32)}
+
+.tm-sec{background:#fff;border-radius:20rpx;padding:28rpx 30rpx;margin-bottom:24rpx;border:1rpx solid #eef2ef}
+.tm-sec-title{font-size:27rpx;font-weight:600;color:#333;display:block;margin-bottom:18rpx}
+.tm-voices{display:flex;gap:14rpx;flex-wrap:wrap}
+.tm-voice{flex:1;min-width:150rpx;background:#f7faf8;border:2rpx solid #e6efe9;border-radius:16rpx;padding:20rpx 12rpx;display:flex;flex-direction:column;align-items:center}
+.tm-voice.sel{background:#e8f8ee;border-color:#07c160}
+.tm-voice-name{font-size:26rpx;color:#222;font-weight:600}
+.tm-voice.sel .tm-voice-name{color:#07c160}
+.tm-voice-desc{font-size:21rpx;color:#9aa8a0;margin-top:6rpx}
+.tm-tick-row{display:flex;align-items:center;justify-content:space-between;margin-top:24rpx;padding-top:22rpx;border-top:1rpx solid #f0f4f1}
+.tm-tick-label{font-size:27rpx;color:#444}
+
+.tm-sec-head{display:flex;align-items:center;justify-content:space-between;margin:6rpx 0 16rpx}
+.tm-sec-head .tm-sec-title{margin-bottom:0}
+.tm-clear{font-size:25rpx;color:#ff4d4f;padding:4rpx 8rpx}
+
+.tm-list{display:flex;flex-direction:column;gap:14rpx}
+.tm-item{display:flex;align-items:center;background:#fff;border-radius:18rpx;padding:22rpx 24rpx;border:1rpx solid #eef2ef}
+.tm-order{display:flex;flex-direction:column;margin-right:12rpx;flex-shrink:0}
+.tm-move{font-size:17rpx;color:#c3cdc7;padding:3rpx 6rpx;line-height:1}
+.tm-idx{width:46rpx;height:46rpx;line-height:46rpx;text-align:center;background:#07c160;color:#fff;border-radius:50%;font-size:24rpx;margin-right:18rpx;flex-shrink:0}
+.tm-body{flex:1;display:flex;flex-direction:column;min-width:0}
+.tm-name{font-size:29rpx;color:#222;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm-dur{font-size:23rpx;color:#9aa8a0;margin-top:6rpx}
+.tm-del{font-size:30rpx;color:#ccd5cf;padding:0 6rpx;flex-shrink:0}
+
+.tm-empty{display:flex;flex-direction:column;align-items:center;padding:72rpx 0}
+.tm-empty-emoji{font-size:80rpx;margin-bottom:20rpx}
+.tm-empty-text{font-size:26rpx;color:#a8b5ad}
+
+.tm-pad{height:160rpx}
+
+.tm-actions{position:fixed;left:170rpx;right:0;bottom:0;display:flex;align-items:center;gap:16rpx;padding:16rpx 24rpx calc(16rpx+env(safe-area-inset-bottom));background:#f2f7f4;border-top:1rpx solid #e6efe9;z-index:10}
+.tm-add-btn{flex:1;background:#fff;color:#07c160;border:2rpx solid #07c160;border-radius:44rpx;font-size:29rpx;line-height:80rpx;margin:0;padding:0}
+.tm-add-btn::after{border:none}
+.tm-start-btn{flex:1.3;background:#07c160;color:#fff;border-radius:44rpx;font-size:30rpx;line-height:80rpx;margin:0;padding:0;font-weight:600}
+.tm-start-btn::after{border:none}
+
+/* 时长选择器 */
+.tm-picker{display:flex;align-items:center;justify-content:center;background:#f7f7f7;border:2rpx solid #e8e8e8;border-radius:16rpx;padding:20rpx 30rpx}
+.tm-picker-val{font-size:46rpx;font-weight:700;color:#07c160;line-height:1}
+.tm-picker-unit{font-size:27rpx;color:#555;margin-left:12rpx}
+.tm-picker-arrow{font-size:24rpx;color:#bfc7c2;margin-left:14rpx}

@@ -1,0 +1,69 @@
+<view class="cd-page">
+
+  <!-- 顶部：整体进度 -->
+  <view class="cd-top">
+    <view class="cd-top-row">
+      <text class="cd-step">任务 {{currentIndex + 1}} / {{total}}</text>
+      <text class="cd-voice">🔊 {{voiceName}}</text>
+    </view>
+    <view class="cd-obar">
+      <view class="cd-ofill" style="width:{{overallPct}}%"></view>
+    </view>
+  </view>
+
+  <!-- 环形倒计时 -->
+  <view class="cd-ring-wrap">
+    <view class="cd-ring {{counting ? 'urgent' : ''}}"
+          style="background: conic-gradient({{counting ? '#ff4d4f' : '#07c160'}} {{ringDeg}}deg, rgba(255,255,255,0.10) {{ringDeg}}deg 360deg)">
+      <view class="cd-ring-inner">
+        <text class="cd-time {{counting ? 'urgent' : ''}}">{{timeText}}</text>
+        <text class="cd-tlabel">{{taskLabel}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 当前任务 -->
+  <view class="cd-name-wrap">
+    <text class="cd-badge">{{phase === 'paused' ? '已暂停' : '正在进行'}}</text>
+    <text class="cd-name">{{taskName}}</text>
+  </view>
+
+  <!-- 任务清单 -->
+  <scroll-view class="cd-list" scroll-y>
+    <view wx:for="{{tasks}}" wx:key="id"
+          class="cd-item {{index === currentIndex ? 'cur' : ''}} {{index < currentIndex ? 'done' : ''}}">
+      <text class="cd-idx">{{index + 1}}</text>
+      <text class="cd-iname">{{item.name}}</text>
+      <text class="cd-itime">{{item.timeLabel}}</text>
+    </view>
+  </scroll-view>
+
+  <!-- 控制栏 -->
+  <view class="cd-ctrl">
+    <button class="cd-btn ghost" bindtap="togglePause">{{phase === 'paused' ? '继续' : '暂停'}}</button>
+    <button class="cd-btn ghost" bindtap="skipTask">跳过本项</button>
+    <button class="cd-btn danger" bindtap="quit">结束</button>
+  </view>
+
+  <!-- 语音准备中 -->
+  <view class="cd-mask" wx:if="{{phase === 'preparing'}}" catchtouchmove="noop">
+    <view class="cd-prep">
+      <view class="cd-spinner"></view>
+      <text class="cd-prep-text">正在准备语音播报…</text>
+    </view>
+  </view>
+
+  <!-- 全部完成：庆祝特效 -->
+  <view class="cd-celebrate" wx:if="{{phase === 'finished'}}" catchtouchmove="noop">
+    <view class="cft" wx:for="{{confetti}}" wx:key="id"
+          style="left:{{item.left}}%;width:{{item.size}}rpx;height:{{item.size * 1.6}}rpx;background:{{item.color}};animation-delay:{{item.delay}}s;animation-duration:{{item.dur}}s;transform:rotate({{item.rot}}deg)"></view>
+
+    <view class="cd-done-card">
+      <text class="cd-done-emoji">🎉</text>
+      <text class="cd-done-title">全部完成！</text>
+      <text class="cd-done-sub">共 {{total}} 个任务，恭喜你坚持到底</text>
+      <button class="cd-btn primary" bindtap="quit">返回</button>
+    </view>
+  </view>
+
+</view>

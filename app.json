@@ -2,7 +2,8 @@
   "pages": [
     "pages/index/index",
     "pages/stats/stats",
-    "pages/todo/todo"
+    "pages/todo/todo",
+    "pages/countdown/countdown"
   ],
   "window": {
     "navigationBarBackgroundColor": "#07c160",

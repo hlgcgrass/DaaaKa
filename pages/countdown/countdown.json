@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "计时器",
+  "navigationBarBackgroundColor": "#0b231c",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#0b231c",
+  "disableScroll": true,
+  "usingComponents": {}
+}

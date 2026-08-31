@@ -1,22 +1,35 @@
 const store = require('../../utils/store.js')
 
+function fmtSec(s) {
+  s = Math.max(0, s | 0)
+  var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60
+  if (h > 0) return h + ':' + String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0')
+  return String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0')
+}
+
+// YYYY-MM-DD 偏移 n 天
+function dayOffset(dateStr, delta) {
+  var p = function (n) { return String(n).padStart(2, '0') }
+  var parts = dateStr.split('-').map(Number)
+  var dt = new Date(parts[0], parts[1] - 1, parts[2])
+  dt.setDate(dt.getDate() + delta)
+  return dt.getFullYear() + '-' + p(dt.getMonth() + 1) + '-' + p(dt.getDate())
+}
+
 Page({
   data: {
-    identity: '',
-    editingIdentity: false,
-    identityDraft: '',
-    avatar: '',
     total: 0,
     done: 0,
     rate: 0,
-    habits: [],
+    categorySections: [],
     year: new Date().getFullYear(),
     weekHeads: ['日', '一', '二', '三', '四', '五', '六'],
     calYear: 0,
     calMonth: 0,
     monthLabel: '',
     calCells: [],
-    calAnim: ''
+    calAnim: '',
+    calendarExpanded: false
   },
 
   onShow: function () {
@@ -28,9 +41,32 @@ Page({
     const total = habits.length
     const prog = store.todayProgress()
     const rate = total ? Math.round(prog.done / total * 100) : 0
-    const list = habits.map(h => {
+
+    // 把单个习惯映射成展示对象
+    function mapHabit(h) {
+      const today = store.todayStr()
       const streak = store.calcStreak(h.records)
       const count = Object.keys(h.records).filter(k => h.records[k]).length
+      const isTimer = !!(h.timerEnabled || (h.timerMin > 0))
+      const isCount = !!h.countEnabled
+      const durations = h.durations || {}
+      const totalDurationSec = Object.keys(durations).reduce((sum, k) => sum + (durations[k] || 0), 0)
+      const todayDurationSec = durations[today] || 0
+      const week = []
+      for (let i = 6; i >= 0; i--) {
+        const ds = dayOffset(today, -i)
+        const sec = durations[ds] || 0
+        const dp = ds.split('-')
+        week.push({
+          label: i === 0 ? '今' : (parseInt(dp[1], 10) + '/' + parseInt(dp[2], 10)),
+          sec: sec,
+          text: fmtSec(sec),
+          has: sec > 0
+        })
+      }
+      const totalCount = isCount
+        ? Object.keys(h.records).reduce((sum, k) => sum + (typeof h.records[k] === 'number' ? h.records[k] : 0), 0)
+        : count
       return {
         id: h.id,
         name: h.name,
@@ -39,23 +75,45 @@ Page({
         streak: streak,
         best: store.calcBest(h.records),
         count: count,
-        chain: store.habitChain(h.records, 14),
-        msg: store.chainMessage(streak, count, h.name),
-        badges: store.milestones(h.records)
+        doneToday: !!h.records[today],
+        isTimer: isTimer,
+        isCount: isCount,
+        totalDurationSec: totalDurationSec,
+        totalDurationText: fmtSec(totalDurationSec),
+        todayDurationSec: todayDurationSec,
+        todayDurationText: fmtSec(todayDurationSec),
+        week: week,
+        totalCount: totalCount,
+        chain: store.habitChain(h.records, 14)
+      }
+    }
+
+    // 按专题（分类）分组：仅取 type='group' 的三个习惯分组
+    const cats = store.getCategories().filter(function (c) { return c.type === 'group' })
+    const categorySections = cats.map(function (cat) {
+      const list = habits.filter(function (h) { return h.category === cat.id }).map(mapHabit)
+      const done = list.filter(function (h) { return h.doneToday }).length
+      return {
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon,
+        color: cat.color,
+        total: list.length,
+        done: done,
+        expanded: true,
+        habits: list
       }
     })
+
     let y = this.data.calYear
     let m = this.data.calMonth
     if (!y) { const now = new Date(); y = now.getFullYear(); m = now.getMonth() }
     this.buildCalendar(y, m)
     this.setData({
-      identity: store.getIdentity(),
-      identityDraft: store.getIdentity(),
-      avatar: store.getAvatar(),
       total: total,
       done: prog.done,
       rate: rate,
-      habits: list,
+      categorySections: categorySections,
       year: new Date().getFullYear()
     })
   },
@@ -95,6 +153,18 @@ Page({
     this.buildCalendar(y, m, 'slide-in-right')
   },
 
+  toggleCalendar: function () {
+    this.setData({ calendarExpanded: !this.data.calendarExpanded })
+  },
+
+  // 专题折叠 / 展开
+  toggleCat: function (e) {
+    const idx = e.currentTarget.dataset.idx
+    if (idx == null) return
+    const key = 'categorySections[' + idx + '].expanded'
+    this.setData({ [key]: !this.data.categorySections[idx].expanded })
+  },
+
   onCalTouchStart: function (e) {
     this._tx = e.changedTouches[0].clientX
   },
@@ -107,43 +177,19 @@ Page({
     else if (dx < -40) this.nextMonth()
   },
 
-  // ===== 头像设置 =====
-  // 点头像 = 调用微信头像选择器（open-type=chooseAvatar）
-  onChooseAvatar: function (e) {
-    const url = e.detail.avatarUrl
-    if (!url) return
-    this.persistAvatar(url)
-  },
-  // 持久化：优先存为本地文件，避免临时路径失效
-  persistAvatar: function (src) {
+  // ===== 数据重置 =====
+  onClearAll: function () {
     const that = this
-    const isTemp = src.indexOf('http://tmp/') === 0 || src.indexOf('wxfile://tmp/') === 0
-    if (isTemp) {
-      wx.getFileSystemManager().saveFile({
-        tempFilePath: src,
-        success: function (r) { that.commitAvatar(r.savedFilePath) },
-        fail: function () { that.commitAvatar(src) }
-      })
-    } else {
-      that.commitAvatar(src)
-    }
-  },
-  commitAvatar: function (path) {
-    store.setAvatar(path)
-    this.setData({ avatar: path })
-    wx.showToast({ title: '头像已更新', icon: 'success' })
-  },
-
-  // ===== 身份宣言 =====
-  startEditIdentity: function () {
-    this.setData({ editingIdentity: true, identityDraft: this.data.identity })
-  },
-  onIdentityInput: function (e) { this.setData({ identityDraft: e.detail.value }) },
-  saveIdentity: function () {
-    store.setIdentity(this.data.identityDraft)
-    this.setData({ editingIdentity: false })
-    wx.showToast({ title: '已保存', icon: 'success' })
-    this.refresh()
-  },
-  cancelIdentity: function () { this.setData({ editingIdentity: false }) }
+    wx.showModal({
+      title: '清空所有数据',
+      content: '确定要删除所有习惯、打卡记录和头像吗？此操作不可恢复。',
+      confirmColor: '#FF6B6B',
+      success: function (res) {
+        if (!res.confirm) return
+        store.clearAll()
+        wx.showToast({ title: '已清空', icon: 'success' })
+        that.refresh()
+      }
+    })
+  }
 })

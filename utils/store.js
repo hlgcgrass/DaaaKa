@@ -15,56 +15,28 @@ const CATEGORIES = [
 // 图标：清新可爱卡通 PNG，存放于 assets/icons/
 // h21~h34 用户定制事项（排最前）；h01~h20 通用；h35~h50 扩展通用
 const ICONS = [
-  '/assets/icons/h21.png', // 练背
-  '/assets/icons/h22.png', // 哑铃
-  '/assets/icons/h23.png', // 练核心
+  // —— 你的 15 个习惯 ——
+  '/assets/icons/h21.png', // 练背（练背部）
+  '/assets/icons/h22.png', // 哑铃（练手臂）
+  '/assets/icons/h23.png', // 练核心（死虫）
   '/assets/icons/h24.png', // 垫脚尖
   '/assets/icons/h25.png', // 腹式呼吸
   '/assets/icons/h26.png', // 练臀腿
-  '/assets/icons/h27.png', // 头皮按摩
-  '/assets/icons/h28.png', // 穴位按摩
+  '/assets/icons/h27.png', // 头皮按摩（梳头）
+  '/assets/icons/h28.png', // 穴位按摩（热敷）
   '/assets/icons/h29.png', // 喝水
-  '/assets/icons/h30.png', // 吃钙片
-  '/assets/icons/h31.png', // 吃vd
   '/assets/icons/h32.png', // 阅读
   '/assets/icons/h33.png', // 备课
   '/assets/icons/h34.png', // 听课
-  '/assets/icons/h01.png', // 跑步
-  '/assets/icons/h02.png', // 健身
-  '/assets/icons/h03.png', // 瑜伽
-  '/assets/icons/h04.png', // 骑行
-  '/assets/icons/h05.png', // 阅读
-  '/assets/icons/h06.png', // 写作
-  '/assets/icons/h07.png', // 画画
-  '/assets/icons/h08.png', // 练琴
-  '/assets/icons/h09.png', // 喝水
-  '/assets/icons/h10.png', // 饮食
-  '/assets/icons/h11.png', // 早睡
-  '/assets/icons/h12.png', // 早起
-  '/assets/icons/h13.png', // 服药
-  '/assets/icons/h14.png', // 打扫
-  '/assets/icons/h15.png', // 记账
-  '/assets/icons/h16.png', // 复盘
-  '/assets/icons/h17.png', // 戒手机
-  '/assets/icons/h18.png', // 戒烟
-  '/assets/icons/h19.png', // 目标
-  '/assets/icons/h20.png', // 成长
+  '/assets/icons/h13.png', // 服药（吃药）
+  '/assets/icons/h06.png', // 写作（练字）
+  '/assets/icons/h02.png', // 健身（深蹲）
+  // —— 5 个机动图标 ——
   '/assets/icons/h35.png', // 冥想
   '/assets/icons/h36.png', // 拉伸
   '/assets/icons/h37.png', // 散步
-  '/assets/icons/h38.png', // 早睡(新版)
-  '/assets/icons/h39.png', // 早起(新版)
-  '/assets/icons/h40.png', // 写日记
-  '/assets/icons/h41.png', // 护肤
-  '/assets/icons/h42.png', // 做饭
-  '/assets/icons/h43.png', // 整理房间
-  '/assets/icons/h44.png', // 听播客
-  '/assets/icons/h45.png', // 学英语
-  '/assets/icons/h46.png', // 游泳
-  '/assets/icons/h47.png', // 跳绳
-  '/assets/icons/h48.png', // 看书
-  '/assets/icons/h49.png', // 运动
-  '/assets/icons/h50.png'  // 洗澡
+  '/assets/icons/h19.png', // 目标
+  '/assets/icons/h16.png'  // 复盘
 ]
 
 // 习惯名 -> 图标路径（添加习惯时自动预选对应图标）
@@ -98,7 +70,17 @@ const ICON_BY_NAME = {
   '跳绳': '/assets/icons/h47.png',
   '看书': '/assets/icons/h48.png',
   '运动': '/assets/icons/h49.png',
-  '洗澡': '/assets/icons/h50.png'
+  '洗澡': '/assets/icons/h50.png',
+  // —— 你的 15 个习惯（添加时自动预选图标）——
+  '深蹲': '/assets/icons/h02.png',
+  '练背部': '/assets/icons/h21.png',
+  '练手臂': '/assets/icons/h22.png',
+  '练臀腿': '/assets/icons/h26.png',
+  '死虫': '/assets/icons/h23.png',
+  '练字': '/assets/icons/h06.png',
+  '吃药': '/assets/icons/h13.png',
+  '热敷': '/assets/icons/h28.png',
+  '梳头': '/assets/icons/h27.png'
 }
 const COLORS = ['#FF9AA2', '#FFB7B2', '#FFDAC1', '#FAE3B5', '#B5EAD7', '#C7CEEA', '#A8E6CF', '#FFAAA5', '#FFD3B6', '#C8E6FF']
 // 兼容旧字段名（部分代码仍引用 EMOJIS）
@@ -153,14 +135,17 @@ function addHabit(opts) {
     id: 'h_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     name: (opts.name || '').trim(),
     emoji: opts.emoji || EMOJIS[0],
-    color: opts.color || COLORS[0],
+    color: opts.color || COLORS[COLORS.length - 1],
     cue: (opts.cue || '').trim(), // 情境 / 地点
     time: (opts.time || '').trim(), // 时间
     category: opts.category || 'fitness', // 所属分类（默认增肌运动）
     createdAt: todayStr(),
-    timerMin: opts.timerMin || 0, // 计时打卡时长（分钟），0 = 不用计时
+    timerEnabled: !!opts.timerEnabled, // 是否启用正计时（秒表）打卡
+    timerMin: opts.timerMin || 0, // 计时目标时长（分钟），0 = 不限时（纯正计时）
     timerStart: 0, // 计时开始的时间戳（ms），0 = 未在计时
     timerDate: '', // 计时开始的日期（todayStr），用于跨天失效判断
+    durations: {}, // 各日期完成计时时长（秒）：date -> sec
+    countEnabled: !!opts.countEnabled, // 是否启用计次（一天可多次打卡）
     records: {}
   }
   if (!habit.name) return { ok: false, reason: 'empty' }
@@ -181,13 +166,33 @@ function updateHabit(id, patch) {
   if (h) { Object.assign(h, patch); save(d) }
 }
 
+// 按分类重新排序 habits：orderedIds 为该分类下习惯的新顺序 id 列表
+function reorderHabits(catId, orderedIds) {
+  const d = load()
+  if (!d.habits || !orderedIds || !orderedIds.length) return
+  const map = {}
+  d.habits.forEach(h => { map[h.id] = h })
+  let idx = 0
+  d.habits = d.habits.map(h => {
+    if (h.category === catId) return map[orderedIds[idx++]] || h
+    return h
+  })
+  save(d)
+}
+
 function toggleToday(id) {
   const d = load()
   const h = d.habits.find(x => x.id === id)
   if (!h) return
   const t = todayStr()
-  if (h.records[t]) delete h.records[t]
-  else h.records[t] = true
+  if (h.countEnabled) {
+    // 计次模式：每次点击 +1，不减少
+    h.records[t] = (typeof h.records[t] === 'number' ? h.records[t] : 0) + 1
+  } else {
+    // 普通模式：切换布尔完成状态
+    if (h.records[t]) { delete h.records[t]; if (h.durations) delete h.durations[t] }
+    else h.records[t] = true
+  }
   save(d)
 }
 
@@ -196,13 +201,21 @@ function isDoneToday(id) {
   return !!(h && h.records[todayStr()])
 }
 
-// 计时打卡：时间到自动完成。写入今日记录并清除计时状态
-function completeTimer(id) {
+// 正计时打卡：记录本次时长并标记今日完成，清除计时状态
+function completeTimer(id, durationSec) {
   const d = load()
   const h = d.habits.find(x => x.id === id)
   if (!h) return
   const t = todayStr()
-  if (!h.records[t]) h.records[t] = true
+  if (h.countEnabled) {
+    h.records[t] = (typeof h.records[t] === 'number' ? h.records[t] : 0) + 1
+  } else {
+    if (!h.records[t]) h.records[t] = true
+  }
+  if (typeof durationSec === 'number' && durationSec > 0) {
+    if (!h.durations) h.durations = {}
+    h.durations[t] = (h.durations[t] || 0) + Math.round(durationSec)
+  }
   h.timerStart = 0
   h.timerDate = ''
   save(d)
@@ -369,13 +382,21 @@ function categoryTodayProgress(catId) {
   return { done, total }
 }
 
+// 清空所有数据（重置为初始空状态）
+function clearAll() {
+  try {
+    wx.removeStorageSync(STORAGE_KEY)
+    wx.removeStorageSync(AVATAR_KEY)
+  } catch (e) {}
+}
+
 module.exports = {
   MAX_HABITS, EMOJIS, COLORS, ICON_BY_NAME,
   CATEGORIES, getCategories, getHabitsByCategory, categoryTodayProgress,
   todayStr, addDays, diffDays,
   getIdentity, setIdentity, getAvatar, setAvatar,
-  getHabits, addHabit, removeHabit, updateHabit,
-  toggleToday, isDoneToday, completeTimer,
+  getHabits, addHabit, removeHabit, updateHabit, reorderHabits,
+  toggleToday, isDoneToday, completeTimer, clearAll,
   calcStreak, calcBest, recentDays, todayProgress, monthStatus, trailingGrid,
   habitChain, chainMessage, milestones
 }

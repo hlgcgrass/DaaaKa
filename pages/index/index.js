@@ -52,7 +52,7 @@ Page({
     colorList: store.COLORS,
     groupCategories: [],     // 仅 type=group 的分类（用于添加弹窗选择）
     form: {
-      name: '', emoji: store.EMOJIS[0], color: store.COLORS[0],
+      name: '', emoji: store.EMOJIS[0], color: store.COLORS[store.COLORS.length - 1],
       cue: '', time: '', category: 'fitness',
       timerEnabled: false, timerMin: 30
     },
@@ -60,6 +60,7 @@ Page({
     canAdd: true,
     quotaText: '',
     swipedId: '',
+    draggingId: '',
     timerChips: [5, 10, 15, 30, 45, 60],
     showCelebrate: false,
     confetti: [],
@@ -217,22 +218,26 @@ Page({
     var t = store.todayStr()
     var list = habits.map(function (h) {
       var tm = h.timerMin || 0
-      var running = tm > 0 && h.timerStart && h.timerDate === t && !h.records[t]
-      var timing = false, remainingSec = 0, remainingText = '', timerPct = 0
+      var enabled = !!(h.timerEnabled || tm > 0)
+      var targetSec = tm * 60
+      var running = enabled && h.timerStart && h.timerDate === t
+      var timing = false, elapsedSec = 0, elapsedText = '', timerPct = 0
       if (running) {
-        var elapsed = Date.now() - h.timerStart
-        var totalMs = tm * 60000
-        var rem = totalMs - elapsed
+        elapsedSec = Math.floor((Date.now() - h.timerStart) / 1000)
         timing = true
-        if (rem <= 0) { remainingSec = 0; remainingText = '00:00'; timerPct = 100 }
-        else { remainingSec = Math.ceil(rem / 1000); remainingText = fmtSec(remainingSec); timerPct = Math.min(100, Math.round(elapsed / totalMs * 100)) }
+        elapsedText = fmtSec(elapsedSec)
+        if (targetSec > 0) timerPct = Math.min(100, Math.round(elapsedSec / targetSec * 100))
       }
+      var count = typeof h.records[t] === 'number' ? h.records[t] : 0
       return {
         id: h.id, name: h.name, emoji: h.emoji, color: h.color,
         cue: h.cue, time: h.time,
-        doneToday: !!h.records[t],
+        doneToday: h.countEnabled ? (typeof h.records[t] === 'number' && h.records[t] > 0) : !!h.records[t],
+        countEnabled: !!h.countEnabled,
+        count: count,
+        timerEnabled: enabled,
         timerMin: tm, timerStart: h.timerStart || 0, timerDate: h.timerDate || '',
-        timing: timing, remainingSec: remainingSec, remainingText: remainingText, timerPct: timerPct
+        timing: timing, elapsedSec: elapsedSec, elapsedText: elapsedText, timerPct: timerPct
       }
     })
 
@@ -269,74 +274,85 @@ Page({
   tick: function () {
     if (this.data.currentView !== 'habits') return
     var now = Date.now(), t = store.todayStr()
-    var list = this.data.habits, updates = {}, needRefresh = false
+    var list = this.data.habits, updates = {}
     for (var i = 0; i < list.length; i++) {
       var h = list[i]
-      if (h.timerMin > 0 && h.timerStart && h.timerDate === t && !h.doneToday) {
-        var elapsed = now - h.timerStart, totalMs = h.timerMin * 60000, rem = totalMs - elapsed
-        if (rem <= 0) {
-          store.completeTimer(h.id)
-          updates['habits[' + i + '].doneToday'] = true
-          updates['habits[' + i + '].timing'] = false
-          updates['habits[' + i + '].timerStart'] = 0
-          updates['habits[' + i + '].timerDate'] = ''
-          updates['habits[' + i + '].remainingText'] = '00:00'
-          updates['habits[' + i + '].timerPct'] = 100
-          needRefresh = true
-        } else {
-          var sec = Math.ceil(rem / 1000)
-          updates['habits[' + i + '].remainingSec'] = sec
-          updates['habits[' + i + '].remainingText'] = fmtSec(sec)
-          updates['habits[' + i + '].timerPct'] = Math.min(100, Math.round(elapsed / totalMs * 100))
+      if (h.timerEnabled || h.timerMin > 0) {
+        if (h.timerStart && h.timerDate === t) {
+          var elapsed = Math.floor((now - h.timerStart) / 1000)
+          var tSec = (h.timerMin || 0) * 60
+          updates['habits[' + i + '].elapsedSec'] = elapsed
+          updates['habits[' + i + '].elapsedText'] = fmtSec(elapsed)
+          updates['habits[' + i + '].timing'] = true
+          if (tSec > 0) updates['habits[' + i + '].timerPct'] = Math.min(100, Math.round(elapsed / tSec * 100))
         }
       }
     }
     if (Object.keys(updates).length) this.setData(updates)
-    if (needRefresh) {
-      this.refreshHabits(this.data.currentCat)
-      wx.showToast({ title: '⏰ 计时结束，打卡成功', icon: 'success' })
-    }
   },
 
   // ===== 打卡/计时操作 =====
+  // 普通习惯（既不计时也不计次）：点击圆圈完成 / 取消完成
   onToggle: function (e) {
+    var id = e.currentTarget.dataset.id
+    store.toggleToday(id)
+    this.refreshHabits(this.data.currentCat)
+    this.triggerStars(id)
+  },
+
+  // ▶ 按钮：计时（开始 / 完成 / 取消）。同时开启计次时，完成计时会自动 +1 次数
+  onPlay: function (e) {
     var id = e.currentTarget.dataset.id
     var idx = this.data.habits.findIndex(function (h) { return h.id === id })
     if (idx < 0) return
     var h = this.data.habits[idx]
+    var t = store.todayStr()
 
-    if (h.timerMin > 0) {
-      var t = store.todayStr()
-      if (h.doneToday) {
-        store.toggleToday(id)
-        store.updateHabit(id, { timerStart: 0, timerDate: '' })
-        this.refreshHabits(this.data.currentCat)
-        return
-      }
-      if (h.timing) {
-        store.updateHabit(id, { timerStart: 0, timerDate: '' })
-        this.setData({ ['habits[' + idx + '].timerStart']: 0, ['habits[' + idx + '].timerDate']: '', ['habits[' + idx + '].timing']: false })
-        wx.showToast({ title: '已取消计时', icon: 'none' })
-        return
-      }
-      var start = Date.now()
-      store.updateHabit(id, { timerStart: start, timerDate: t })
-      this.setData({
-        ['habits[' + idx + '].timerStart']: start, ['habits[' + idx + '].timerDate']: t,
-        ['habits[' + idx + '].timing']: true,
-        ['habits[' + idx + '].remainingSec']: h.timerMin * 60,
-        ['habits[' + idx + '].remainingText']: fmtSec(h.timerMin * 60),
-        ['habits[' + idx + '].timerPct']: 0
-      })
-      this.ensureTimer()
-      wx.showToast({ title: '开始计时', icon: 'none' })
+    // 计时中 -> 完成（计次习惯由 completeTimer 内部 +1）
+    if (h.timing) {
+      var sec = h.timerStart ? Math.floor((Date.now() - h.timerStart) / 1000) : (h.elapsedSec || 0)
+      store.completeTimer(id, sec)
+      this.refreshHabits(this.data.currentCat)
+      wx.showToast({ title: '打卡成功 · 本次 ' + fmtSec(sec), icon: 'success' })
+      this.triggerStars(id)
       return
     }
+    // 已完成的纯计时习惯（未开计次）-> 再次点击取消完成
+    if (h.doneToday && !h.countEnabled) {
+      store.toggleToday(id)
+      this.refreshHabits(this.data.currentCat)
+      return
+    }
+    // 开始计时
+    var start = Date.now()
+    store.updateHabit(id, { timerStart: start, timerDate: t })
+    this.setData({
+      ['habits[' + idx + '].timerStart']: start, ['habits[' + idx + '].timerDate']: t,
+      ['habits[' + idx + '].timing']: true, ['habits[' + idx + '].elapsedSec']: 0,
+      ['habits[' + idx + '].elapsedText']: '00:00', ['habits[' + idx + '].timerPct']: 0
+    })
+    this.ensureTimer()
+    wx.showToast({ title: '开始计时', icon: 'none' })
+  },
 
-    var wasDone = !!h.doneToday
+  // 次数按钮：计次 +1（独立，不触发计时）
+  onCountBtn: function (e) {
+    var id = e.currentTarget.dataset.id
+    var idx = this.data.habits.findIndex(function (h) { return h.id === id })
+    if (idx < 0) return
+    var h = this.data.habits[idx]
     store.toggleToday(id)
     this.refreshHabits(this.data.currentCat)
-    if (!wasDone) this.triggerStars(id)
+    wx.showToast({ title: '打卡 +' + (h.count + 1) + ' 次', icon: 'none' })
+    this.triggerStars(id)
+  },
+
+  // 计时中点“取消”：停止但不记录
+  onTimerCancel: function (e) {
+    var id = e.currentTarget.dataset.id
+    store.updateHabit(id, { timerStart: 0, timerDate: '' })
+    this.refreshHabits(this.data.currentCat)
+    wx.showToast({ title: '已取消计时', icon: 'none' })
   },
 
   onCompleteNow: function (e) {
@@ -368,9 +384,9 @@ Page({
     this.setData({
       showAdd: true,
       form: {
-        name: '', emoji: store.EMOJIS[0], color: store.COLORS[0],
+        name: '', emoji: store.EMOJIS[0], color: store.COLORS[store.COLORS.length - 1],
         cue: '', time: '', category: this.data.currentCat,
-        timerEnabled: false, timerMin: 30
+        timerEnabled: false, timerMin: 0, countEnabled: false
       },
       nameError: ''
     })
@@ -390,6 +406,7 @@ Page({
   selectEmoji: function (e) { this.setData({ 'form.emoji': e.currentTarget.dataset.v }) },
   selectColor: function (e) { this.setData({ 'form.color': e.currentTarget.dataset.v }) },
   onTimerToggle: function (e) { this.setData({ 'form.timerEnabled': e.detail.value }) },
+  onCountToggle: function (e) { this.setData({ 'form.countEnabled': e.detail.value }) },
   onTimerMinInput: function (e) {
     var v = parseInt(e.detail.value, 10)
     if (isNaN(v)) v = 0; if (v < 1) v = 1; if (v > 600) v = 600
@@ -404,7 +421,8 @@ Page({
     var res = store.addHabit({
       name: name, emoji: f.emoji, color: f.color, cue: f.cue, time: f.time,
       category: f.category,
-      timerMin: f.timerEnabled ? (parseInt(f.timerMin, 10) || 0) : 0
+      timerEnabled: !!f.timerEnabled, timerMin: 0,
+      countEnabled: !!f.countEnabled
     })
     if (!res.ok && res.reason === 'limit') { wx.showToast({ title: '最多 ' + store.MAX_HABITS + ' 个习惯', icon: 'none' }); return }
     wx.showToast({ title: '已添加', icon: 'success' })
@@ -416,6 +434,7 @@ Page({
   // ===== 左滑删除 =====
   onSwipeStart: function (e) { this._sx = e.touches[0].clientX; this._sy = e.touches[0].clientY; this._swiping = false },
   onSwipeMove: function (e) {
+    if (this.data.draggingId) return
     var dx = e.touches[0].clientX - (this._sx || 0), dy = e.touches[0].clientY - (this._sy || 0)
     if (!this._swiping && Math.abs(dx) < 8) return
     if (Math.abs(dx) > Math.abs(dy)) this._swiping = true
@@ -426,6 +445,57 @@ Page({
     }
   },
   onSwipeEnd: function () { this._swiping = false },
+
+  // 统一路由 touchmove / touchend：拖动模式下走排序，否则走左滑删除
+  onCardTouchMove: function (e) {
+    if (this.data.draggingId) this.onHabitTouchMove(e)
+    else this.onSwipeMove(e)
+  },
+  onCardTouchEnd: function (e) {
+    if (this.data.draggingId) this.onHabitTouchEnd(e)
+    else this.onSwipeEnd(e)
+  },
+
+  // ===== 长按拖动排序 =====
+  onHabitLongPress: function (e) {
+    var id = e.currentTarget.dataset.id
+    this.setData({ draggingId: id, swipedId: '' })
+    wx.vibrateShort({ type: 'light' })
+    this.queryCardRects()
+  },
+  queryCardRects: function () {
+    var that = this
+    wx.createSelectorQuery().in(this).selectAll('.card-slide').boundingClientRect(function (rects) {
+      that._cardRects = rects || []
+    }).exec()
+  },
+  onHabitTouchMove: function (e) {
+    if (!this.data.draggingId) return
+    var y = e.touches[0].clientY
+    var rects = this._cardRects
+    if (!rects || !rects.length) return
+    var targetIdx = -1
+    for (var i = 0; i < rects.length; i++) {
+      if (y >= rects[i].top && y <= rects[i].bottom) { targetIdx = i; break }
+    }
+    if (targetIdx < 0) return
+    var habits = this.data.habits
+    var draggingId = this.data.draggingId
+    var fromIdx = habits.findIndex(function (h) { return h.id === draggingId })
+    if (fromIdx < 0 || fromIdx === targetIdx) return
+    var temp = habits[fromIdx]
+    habits[fromIdx] = habits[targetIdx]
+    habits[targetIdx] = temp
+    this.setData({ habits: habits })
+    this.queryCardRects()
+  },
+  onHabitTouchEnd: function () {
+    if (!this.data.draggingId) return
+    var ids = this.data.habits.map(function (h) { return h.id })
+    store.reorderHabits(this.data.currentCat, ids)
+    this.setData({ draggingId: '' })
+    this._cardRects = null
+  },
 
   removeHabit: function (e) {
     var id = e.currentTarget.dataset.id, that = this
